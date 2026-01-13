@@ -149,7 +149,7 @@ aioveu-app/                        # aioveu-app项目根目录
 ├── App.vue                        # 应用根组件（全局样式/生命周期）
 ├── Json.js                        # 模拟数据/配置数据（建议更名）
 ├── LICENSE                        # 项目许可证文件
-├── main.js                        # 应用入口（插件注册/全局配置）
+├── mainForVue2.js                        # 应用入口（插件注册/全局配置）
 ├── manifest.json                  # 跨平台配置（App图标/权限等）
 ├── package-lock.json              # 依赖版本锁定文件
 ├── pages.json                     # 页面路由配置（导航栏/TabBar）
