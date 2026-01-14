@@ -4,6 +4,7 @@ import { useThemeStore } from "@/store";
 
 import { useUserStore } from "@/store/modules/user"; // 添加用户store
 
+
 // 主题初始化
 const themeStore = useThemeStore();
 const userStore = useUserStore(); // 添加用户store实例
@@ -38,24 +39,9 @@ onHide(() => {
 </script>
 
 <style lang="scss">
-/* H5 环境样式变量设置 */
-:root {
-  --primary-color: #165dff;
-  --primary-color-light: #94bfff;
-  --primary-color-dark: #0e3c9b;
-}
 
-/* 小程序环境样式变量设置 */
-page {
-  --primary-color: #165dff;
-  --primary-color-light: #94bfff;
-  --primary-color-dark: #0e3c9b;
-  background: #f8f8f8;
-}
+/* 引入全局样式 */
 
-/* 动态加载小程序主题色的钩子 */
-/* 用于通过小程序原生API获取主题色并应用 */
-.theme-container {
-  display: none;
-}
+@import "@/styles/index.scss";
+
 </style>

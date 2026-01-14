@@ -1,0 +1,58 @@
+// src/styles/variables.scss
+// 颜色变量
+$uni-color-primary: #165dff;
+$uni-color-success: #4cd964;
+$uni-color-warning: #f0ad4e;
+$uni-color-error: #dd524d;
+
+// 背景颜色
+$uni-bg-color: #f8f8f8;
+$uni-bg-color-grey: #f8f8f8;
+$uni-bg-color-hover: #f1f1f1;
+
+// 文字颜色
+$font-color-dark: #303133;
+$font-color-base: #606266;
+$font-color-light: #909399;
+$font-color-disabled: #c0c4cc;
+$font-color-placeholder: #808080;
+$font-color-white: #ffffff;
+
+// 文字大小
+$font-sm: 12px;
+$font-base: 14px;
+$font-lg: 16px;
+$font-xl: 18px;
+$font-xxl: 20px;
+
+// 边距
+$spacing-base: 8px;
+$spacing-sm: 4px;
+$spacing-lg: 12px;
+$spacing-xl: 16px;
+
+// 圆角
+$border-radius-sm: 2px;
+$border-radius-base: 4px;
+$border-radius-lg: 8px;
+$border-radius-circle: 50%;
+
+// 边框
+$border-color: #dcdfe6;
+$border-width-base: 1px;
+$border-style-base: solid;
+$border-color-base: $border-color;
+
+// CSS 自定义属性
+:root {
+  --primary-color: #165dff;
+  --primary-color-light: #94bfff;
+  --primary-color-dark: #0e3c9b;
+}
+
+page {
+  --primary-color: #165dff;
+  --primary-color-light: #94bfff;
+  --primary-color-dark: #0e3c9b;
+  background: #f8f8f8;
+}

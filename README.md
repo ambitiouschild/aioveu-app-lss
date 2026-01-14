@@ -78,15 +78,15 @@ aioveu-app/                        # aioveu-app项目根目录
 ├── .idea/                         # JetBrains IDE 配置文件目录（如WebStorm）  
 ├── api/                           # 后端API接口请求封装 
 │   ├── oms/                       # 订单管理系统接口  
-│   │   ├── cart.js                # 购物车接口
-│   │   └── order.js               # 订单接口
+│   │   ├── cart.ts                # 购物车接口
+│   │   └── order.ts               # 订单接口
 │   ├── pms/                       # 商品管理系统接口
-│   │   ├── category.js            # 商品分类接口
-│   │   └── goods.js               # 商品接口
+│   │   ├── category.ts            # 商品分类接口
+│   │   └── goods.ts               # 商品接口
 │   ├── sms/                       # 营销系统接口
-│   │   └── advert.js              # 广告/活动接口
+│   │   └── advert.ts              # 广告/活动接口
 │   ├── ums/                       # 用户管理系统接口
-│   │   └── address.js             # 用户地址接口
+│   │   └── address.ts             # 用户地址接口
 │   └── user.js                    # 用户认证接口（登录/注册等）
 ├── components/                    # 通用组件目录
 │   ├── mix-loading/               # 自定义加载动画组件 

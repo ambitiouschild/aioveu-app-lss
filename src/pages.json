@@ -19,25 +19,19 @@
       }
     },
     {
-      "path": "pages/work/index",
+      "path": "pages/category/category",
       "style": {
-        "navigationBarTitleText": "工作台"
+        "navigationBarTitleText": "商品分类"
       }
     },
     {
-      "path": "pages/todo/index",
+      "path": "pages/cart/cart",
       "style": {
-        "navigationBarTitleText": "todo"
+        "navigationBarTitleText": "我的购物车"
       }
     },
     {
-      "path": "pages/todo/form",
-      "style": {
-        "navigationBarTitleText": "todo-form"
-      }
-    },
-    {
-      "path": "pages/mine/index",
+      "path": "pages/user/user",
       "style": {
         "navigationBarTitleText": "我的"
       }
@@ -587,26 +581,26 @@
       {
         "pagePath": "pages/index/index",
         "text": "首页",
-        "iconPath": "static/tabbar/home.png",
-        "selectedIconPath": "static/tabbar/home-active.png"
+        "iconPath": "static/tabbar/home/tab-home.png",
+        "selectedIconPath": "static/tabbar/home/tab-home-current.png"
       },
       {
-        "pagePath": "pages/work/index",
-        "text": "工作台",
-        "iconPath": "static/tabbar/work.png",
-        "selectedIconPath": "static/tabbar/work-active.png"
+        "pagePath": "pages/category/category",
+        "text": "商品分类",
+        "iconPath": "static/tabbar/cate/tab-cate.png",
+        "selectedIconPath": "static/tabbar/cate/tab-cate-current.png"
       },
       {
-        "pagePath": "pages/todo/index",
-        "text": "todo",
-        "iconPath": "static/tabbar/work.png",
-        "selectedIconPath": "static/tabbar/work-active.png"
+        "pagePath": "pages/cart/cart",
+        "text": "我的购物车",
+        "iconPath": "static/tabbar/cart/tab-cart.png",
+        "selectedIconPath": "static/tabbar/cart/tab-cart-current.png"
       },
       {
-        "pagePath": "pages/mine/index",
+        "pagePath": "pages/user/user",
         "text": "我的",
-        "iconPath": "static/tabbar/mine.png",
-        "selectedIconPath": "static/tabbar/mine-active.png"
+        "iconPath": "static/tabbar/mine/tab-my.png",
+        "selectedIconPath": "static/tabbar/mine/tab-my-current.png"
       }
     ]
   }

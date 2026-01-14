@@ -1,12 +1,38 @@
 import { defineConfig, type UserConfig, type ConfigEnv, loadEnv } from "vite";
 import uni from "@dcloudio/vite-plugin-uni";
 import AutoImport from "unplugin-auto-import/vite";
+import { resolve } from "path";
 
 export default defineConfig(async ({ mode }: ConfigEnv): Promise<UserConfig> => {
   const UnoCss = await import("unocss/vite").then((i) => i.default);
   const env = loadEnv(mode, process.cwd());
 
   return {
+
+    // 您问到了一个很好的问题！这确实是很多开发者都会遇到的困惑。让我解释一下为什么之前可以，现在不行：
+/*    主要原因是：Sass 编译器升级了
+  1. Sass 1.78.0+ 版本更严格
+  从 Sass 1.78.0 版本开始，编译器对单位运算的检查变得更加严格：
+  之前（Sass 1.77.0 及以下）：
+  font-size: 16px + 2upx;  // ✅ 可以编译，但会警告
+  现在（Sass 1.78.0+）：
+font-size: 16px + 2upx;  // ❌ 编译错误
+
+*/
+
+
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: `@import "@/styles/variables.scss";`  // 全局注入变量
+        }
+      }
+    },
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, 'src'),  // 确保这行存在
+      },
+    },
     server: {
       host: "0.0.0.0",
       port: +env.VITE_APP_PORT,

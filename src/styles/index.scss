@@ -1,0 +1,15 @@
+// src/styles/index.scss
+// 样式入口文件
+
+//在 SCSS 文件中，应该使用 @import而不是 import。import是 JavaScript/TypeScript 的模块导入语法，而 SCSS 文件有自己的导入语法。
+@import './variables.scss';
+@import './iconfont.scss';
+@import './reset.scss';
+@import './common.scss';
+@import './mixins.scss';
+
+// 动态加载小程序主题色的钩子
+/* 用于通过小程序原生API获取主题色并应用 */
+.theme-container {
+  display: none;
+}

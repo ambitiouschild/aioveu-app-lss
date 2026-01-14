@@ -1,0 +1,37 @@
+// src/styles/reset.scss
+// 重置样式
+view,
+scroll-view,
+swiper,
+swiper-item,
+cover-view,
+cover-image,
+icon,
+text,
+rich-text,
+progress,
+button,
+checkbox,
+form,
+input,
+label,
+radio,
+slider,
+switch,
+textarea,
+navigator,
+audio,
+camera,
+image,
+video {
+  box-sizing: border-box;
+}
+
+/* input 样式 */
+.input-placeholder {
+  color: #999999;
+}
+
+.placeholder {
+  color: #999999;
+}
