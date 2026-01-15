@@ -1,6 +1,6 @@
 import request from "@/utils/request";
 
-const USER_BASE_URL = "/api/v1/users";
+const USER_BASE_URL = "/aioveu-ums/app-api/v1/members";
 
 const UserAPI = {
   /**
@@ -12,6 +12,8 @@ const UserAPI = {
     return request<UserInfo>({
       url: `${USER_BASE_URL}/me`,
       method: "GET",
+      //关键：只有在没有Authorization头且有token时，才添加Bearer token
+
     });
   },
 
@@ -147,10 +149,11 @@ export interface UserInfo {
   username?: string;
 
   /** 昵称 */
-  nickname?: string;
+  nickName?: string;
+
 
   /** 头像URL */
-  avatar?: string;
+  avatarUrl?: string;
 
   /** 角色 */
   roles?: string[];

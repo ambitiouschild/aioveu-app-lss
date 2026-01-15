@@ -1,30 +1,54 @@
 import { defineStore } from "pinia";
 import AuthAPI, { type LoginFormData } from "@/api/auth";
 import UserAPI, { type UserInfo } from "@/api/system/user";
-import { setToken, getUserInfo, setUserInfo, clearAll } from "@/utils/cache";
+import {
+  setToken,
+  getToken,
+  getUserInfo,
+  setUserInfo,
+  clearAll,
+  setPermissions,
+  getPermissions
+} from "@/utils/cache";
 
 export const useUserStore = defineStore("user", () => {
-  const userInfo = ref<UserInfo | undefined>(getUserInfo());
-  const permissions = ref<string[]>([]); // 新增权限列表字段
-
   // 状态
-  const token = ref('')
+  const token = ref(getToken() || '');
+  const userInfo = ref<UserInfo | undefined>(getUserInfo());
+  const permissions = ref<string[]>(getPermissions() || []); // 权限列表
+  const hasLogin = computed(() => !!token.value);
 
-  // getters
-  const hasLogin = computed(() => !!token.value)
-  // getters
-  const nickname = computed(() => !!token.value)
-  // getters
-  const avatar = computed(() => !!token.value)
-  // getters
-  const balance = computed(() => !!token.value)
+  // Getters
+  const userId = computed(() => userInfo.value?.userId || null);
+  const nickName = computed(() => userInfo.value?.nickName || '');
+  const username = computed(() => userInfo.value?.username || userInfo.value?.nickName || '');
+  const avatar = computed(() => userInfo.value?.avatarUrl || '');
+
+  // 用户资产
+  const assets = ref({
+    balance: 0,
+    points: 0,
+    couponCount: 0
+  });
+
 
   // 登录
   const login = (data: LoginFormData) => {
     return new Promise((resolve, reject) => {
       AuthAPI.login(data)
         .then((data) => {
-          setToken(data.accessToken);
+
+          // 设置 token
+          const accessToken = data.access_token || data.accessToken;
+          if (!accessToken) {
+            console.error("登录返回中没有找到access_token字段");
+            console.error("返回数据字段:", Object.keys(data));
+            reject(new Error("登录失败: 未找到访问令牌"));
+            return;
+          }
+
+          token.value = accessToken; //将token添加到状态
+          setToken(accessToken);  //将token添加到缓存
           resolve(data);
         })
         .catch((error) => {
@@ -36,10 +60,41 @@ export const useUserStore = defineStore("user", () => {
 
   // 微信登录
   const loginByWechat = (code: string) => {
+
+    console.info("开始调用微信登录接口");
+
     return new Promise((resolve, reject) => {
       AuthAPI.wechatLogin(code)
         .then((data) => {
-          setToken(data.accessToken);
+
+          // console.log("微信登录返回数据:", data);
+
+          // 设置 token
+          const accessToken = data.access_token || data.accessToken;
+          if (!accessToken) {
+            console.error("登录返回中没有找到access_token字段");
+            console.error("返回数据字段:", Object.keys(data));
+            reject(new Error("登录失败: 未找到访问令牌"));
+            return;
+          }
+
+          token.value = accessToken; //将token添加到状态
+          setToken(accessToken);  //将token添加到缓存
+
+          // 保存刷新令牌
+          if (data.refresh_token) {
+            uni.setStorageSync('refresh_token', data.refresh_token);
+          }
+
+          // 保存过期时间
+          if (data.expires_in) {
+            const expiresAt = Date.now() + data.expires_in * 1000;
+            uni.setStorageSync('token_expires_at', expiresAt.toString());
+          }
+
+          console.log("微信登录成功，token已保存");
+
+
           resolve(data);
         })
         .catch((error) => {
@@ -51,17 +106,28 @@ export const useUserStore = defineStore("user", () => {
 
   // 获取用户信息
   const getInfo = () => {
+
+    console.log("获取用户信息");
+
     return new Promise((resolve, reject) => {
       UserAPI.getUserInfo()
         .then((data) => {
 
-          // // 新增权限数据处理
-          // if (data.perms) {
-          //   permissions.value = data.perms;
-          // }
-          console.log("获取用户信息成功，我是雒世松");
+
+          // console.log("获取用户信息成功:", data);
+
+          // 处理权限数据
+          if (data.perms || data.perms) {
+            const perms = data.perms || data.perms || [];
+            permissions.value = perms;
+            setPermissions(perms);
+            console.log("权限数据已保存:", perms);
+          }
+
+          // 保存用户信息
           setUserInfo(data);
           userInfo.value = data;
+
           resolve(data);
         })
         .catch((error) => {
@@ -79,8 +145,17 @@ export const useUserStore = defineStore("user", () => {
     } catch (error) {
       console.error("登出失败", error);
     } finally {
+
+      // 清除所有状态
+      token.value = '';
+      userInfo.value = undefined;
+      permissions.value = [];
+
+      // 清除缓存
       clearAll(); // 清除本地的 token 和用户信息缓存
       userInfo.value = undefined; // 清空用户信息
+
+      console.log("用户已退出登录");
     }
   };
 
@@ -88,24 +163,49 @@ export const useUserStore = defineStore("user", () => {
   const isUserInfoComplete = (): boolean => {
     if (!userInfo.value) return false;
 
-    return !!(userInfo.value.nickname && userInfo.value.avatar);
+    return !!(userInfo.value.nickName && userInfo.value.avatarUrl);
   };
 
-  // // 检查权限
-  // const hasPermission = (perm: string): boolean => {
-  //   return permissions.value.includes(perm);
-  // };
+  // 检查权限
+  const hasPermission = (perm: string): boolean => {
+    return permissions.value.includes(perm);
+  };
+
+  // 获取所有权限
+  const getPermissionsList = (): string[] => {
+    return permissions.value;
+  };
+
+  // 更新用户信息
+  const updateUserInfo = (info: Partial<UserInfo>) => {
+    if (userInfo.value) {
+      userInfo.value = { ...userInfo.value, ...info };
+      setUserInfo(userInfo.value);
+    }
+  };
 
   return {
+// 状态
+    token,
     userInfo,
-    // permissions, // 导出权限列表
+    permissions,
+    hasLogin,
+
+    // Getters
+    userId,
+    nickName,
+    username,
+    avatar,
+
+    // Actions
     login,
     loginByWechat,
     logout,
     getInfo,
     isUserInfoComplete,
-
-    // hasPermission, // 导出权限检查方法
+    hasPermission,
+    getPermissionsList,
+    updateUserInfo,
   };
 });
 

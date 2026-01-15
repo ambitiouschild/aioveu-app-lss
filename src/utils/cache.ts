@@ -35,6 +35,30 @@ export function clearUserInfo() {
 export function clearAll() {
   clearToken();
   clearUserInfo();
+  uni.removeStorageSync('permissions');
+  uni.removeStorageSync('refresh_token');
+  uni.removeStorageSync('token_expires_at');
   // 清除字典缓存
   uni.removeStorageSync("dict_cache");
 }
+
+// 获取权限信息
+export function getPermissions(): any {
+  try {
+    const perms = uni.getStorageSync('permissions');
+    return perms ? JSON.parse(perms) : [];
+  } catch (e) {
+    console.error('获取权限失败:', e);
+    return [];
+  }
+}
+
+// 设置权限信息  缓存工具
+export function setPermissions(permissions: any) {
+  try {
+    uni.setStorageSync('permissions', JSON.stringify(permissions));
+  } catch (e) {
+    console.error('保存权限失败:', e);
+  }
+}
+
