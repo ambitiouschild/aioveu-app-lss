@@ -1,208 +1,375 @@
 <template>
-	<view class="content">
-		<scroll-view scroll-y class="left-aside">
-			<view v-for="item in flist" :key="item.id" class="f-item b-b" :class="{ active: item.id == currentId }" @click="tabtap(item)">{{ item.name }}</view>
-		</scroll-view>
-		<scroll-view scroll-with-animation scroll-y class="right-aside" @scroll="asideScroll" :scroll-top="tabScrollTop">
-			<view v-for="item in slist" :key="item.id" class="s-list" :id="'main-' + item.id">
-				<text class="s-item">{{ item.name }}</text>
-				<view class="t-list">
-					<view @click="navToList(item.id, titem.id)" v-if="titem.parentId === item.id" class="t-item" v-for="titem in tlist" :key="titem.id">
-						<image :src="titem.iconUrl"></image>
-						<text>{{ titem.name }}</text>
-					</view>
-				</view>
-			</view>
-		</scroll-view>
-	</view>
+  <view class="content">
+    <!-- 左侧一级分类 -->
+    <scroll-view scroll-y class="left-aside">
+      <view
+        v-for="item in flist"
+        :key="item.id"
+        class="f-item b-b"
+        :class="{ active: item.id == currentId }"
+        @click="tabtap(item)"
+      >
+        {{ item.name }}
+      </view>
+    </scroll-view>
+
+    <!-- 右侧二级分类 -->
+    <scroll-view
+      scroll-with-animation
+      scroll-y
+      class="right-aside"
+      @scroll="handleScroll"
+      :scroll-top="tabScrollTop"
+    >
+      <view
+        v-for="item in safeSlist"
+        :key="item.id"
+        class="s-list"
+        :id="'main-' + item.id"
+      >
+        <text class="s-item">{{ item.name }}</text>
+        <view class="t-list">
+          <!-- 三级分类 -->
+          <view
+            v-for="titem in getThirdCategories(item.id)"
+            :key="titem.id"
+            @click="goToList(item.id, titem.id)"
+            class="t-item"
+          >
+            <image :src="titem.iconUrl || defaultImageUrl"></image>
+            <text>{{ titem.name }}</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
 </template>
 
-<script>
-import { getCategoryList } from '@/api/pms/category';
-export default {
-	data() {
-		return {
-			sizeCalcState: false,
-			tabScrollTop: 0,
-			currentId: 0,
-			flist: [],
-			slist: [],
-			tlist: []
-		};
-	},
-	onLoad() {
-		this.loadData();
-	},
-	methods: {
-		async loadData() {
-			getCategoryList().then(response => {
-				const categoryList = response.data;
-				categoryList.forEach(first => {
-					this.flist.push(first);
-					if (first.children) {
-						first.children.forEach(second => {
-							this.slist.push(second);
-							if (second.children) {
-								second.children.forEach(third => {
-									this.tlist.push(third);
-								});
-							}
-						});
-					}
-				});
-				// 排序
-				this.flist.sort(function(a, b) {
-					return a.id - b.id;
-				});
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { getCategoryList } from '@/api/pms/category'
 
-				this.slist.sort(function(a, b) {
-					if (a.parentId == b.parentId) {
-						return a.id - b.id;
-					} else {
-						return a.parentId - b.parentId;
-					}
-				});
+//Vue 2 的 Options API 和 Vue 3 的 Composition API
+//✅ 纯 Vue 3 Composition API
+//✅ 正确的响应式数据访问
 
-				this.tlist.sort(function(a, b) {
-					if (a.parentId == b.parentId) {
-						return a.id - b.id;
-					} else {
-						return a.parentId - b.parentId;
-					}
-				});
+// 响应式数据
+const sizeCalcState = ref(false)  // 是否已计算尺寸
+const tabScrollTop = ref(0)       // 右侧滚动位置
+const currentId = ref(0)          // 当前选中的一级分类ID
+const flist = ref([])             // 一级分类列表
+const slist = ref([])             // 二级分类列表
+const tlist = ref([])             // 三级分类列表
+const defaultImageUrl = '/static/default-category.png'  // 默认图片
 
-				this.currentId = this.flist[0].id;
-			});
-		},
-		//一级分类点击
-		tabtap(item) {
-			if (!this.sizeCalcState) {
-				this.calcSize();
-			}
-			this.currentId = item.id;
-			let index = this.slist.findIndex(sitem => sitem.parentId == item.id);
-			this.tabScrollTop = this.slist[index].top;
-		},
-		//右侧栏滚动
-		asideScroll(e) {
-			if (!this.sizeCalcState) {
-				this.calcSize();
-			}
-			let scrollTop = e.detail.scrollTop;
-			let tabs = this.slist.filter(item => item.top <= scrollTop).reverse();
-			if (tabs.length > 0) {
-				this.currentId = tabs[0].parentId;
-			}
-		},
-		//计算右侧栏每个tab的高度等信息
-		calcSize() {
-			let h = 0;
-			this.slist.forEach(item => {
-				let view = uni.createSelectorQuery().select('#main-' + item.id);
-				view.fields(
-					{
-						size: true
-					},
-					data => {
-						item.top = h;
-						h += data.height;
-						item.bottom = h;
-					}
-				).exec();
-			});
-			this.sizeCalcState = true;
-		},
-		navToList(sid, tid) {
-			uni.navigateTo({
-				url: `/pages/product/list?fid=${this.currentId}&sid=${sid}&tid=${tid}`
-			});
-		}
-	}
-};
+// 计算属性：安全的二级分类列表
+const safeSlist = computed(() => {
+  return slist.value.filter(item => item && item.id && item.name)
+})
+
+// 计算属性：获取指定二级分类下的三级分类
+const getThirdCategories = (secondId) => {
+  if (!secondId) return []
+  return tlist.value.filter(titem => titem && titem.parentId === secondId)
+}
+
+/**
+ * 加载分类数据
+ */
+const loadData = async () => {
+  try {
+    console.log("调用API获取分类数据:")
+    const response = await getCategoryList()
+
+    if (!response) {
+      console.error("获取分类数据失败")
+      return
+    }
+
+    const categoryList = response  // ✅ 修复：应该是 response.data
+    console.log("分类数据:", categoryList)
+
+    // 重置数据
+    flist.value = []
+    slist.value = []
+    tlist.value = []
+
+    // 处理数据
+    categoryList.forEach(first => {
+      if (!first?.id) return
+
+      // 一级分类
+      flist.value.push({
+        id: first.id,
+        name: first.name || '未命名',
+        parentId: first.parentId || 0
+      })
+
+      // 二级分类
+      if (first.children?.length) {
+        first.children.forEach(second => {
+          if (!second?.id) return
+
+          const secondItem = {
+            id: second.id,
+            name: second.name || '未命名',
+            parentId: second.parentId || 0
+          }
+          slist.value.push(secondItem)
+
+          // 三级分类
+          if (second.children?.length) {
+            second.children.forEach(third => {
+              if (!third?.id) return
+
+              tlist.value.push({
+                id: third.id,
+                name: third.name || '未命名',
+                parentId: third.parentId || 0,
+                iconUrl: third.iconUrl || null
+              })
+            })
+          }
+        })
+      }
+    })
+
+    // 排序
+    sortCategories()
+
+    // 默认选中第一个
+    if (flist.value.length > 0) {
+      currentId.value = flist.value[0].id
+    }
+
+    console.log("数据加载完成:", {
+      一级分类: flist.value.length,
+      二级分类: slist.value.length,
+      三级分类: tlist.value.length
+    })
+
+  } catch (error) {
+    console.error("加载失败:", error)
+  }
+}
+
+/**
+ * 排序分类
+ */
+const sortCategories = () => {
+  // 一级分类按ID排序
+  flist.value.sort((a, b) => (a.id || 0) - (b.id || 0))
+
+  // 二级分类排序
+  slist.value.sort((a, b) => {
+    const parentCompare = (a.parentId || 0) - (b.parentId || 0)
+    return parentCompare !== 0 ? parentCompare : (a.id || 0) - (b.id || 0)
+  })
+
+  // 三级分类排序
+  tlist.value.sort((a, b) => {
+    const parentCompare = (a.parentId || 0) - (b.parentId || 0)
+    return parentCompare !== 0 ? parentCompare : (a.id || 0) - (b.id || 0)
+  })
+}
+
+/**
+ * 点击一级分类
+ */
+const tabtap = async (item) => {
+  // 更新当前选中的分类ID
+  currentId.value = item.id
+
+  // 如果还没计算过尺寸，先计算
+  if (!sizeCalcState.value) {
+    await calculateSizes()
+  }
+
+  // 找到对应的二级分类，滚动到该位置
+  const index = slist.value.findIndex(sitem => sitem.parentId == item.id)
+  if (index !== -1 && slist.value[index].top !== undefined) {
+    tabScrollTop.value = slist.value[index].top
+  }
+}
+
+/**
+ * 滚动事件处理
+ */
+const handleScroll = (e) => {
+  // 如果还没计算过尺寸，先计算
+  if (!sizeCalcState.value) {
+    calculateSizes()
+  }
+
+  // 获取当前滚动位置
+  const scrollPosition = e.detail.scrollTop
+
+  // 找到当前滚动位置对应的分类
+  const visibleCategories = slist.value
+    .filter(item => (item.top || 0) <= scrollPosition)
+    .reverse()
+
+  if (visibleCategories.length > 0) {
+    currentId.value = visibleCategories[0].parentId || 0
+  }
+}
+
+/**
+ * 计算右侧每个分类块的位置和高度
+ */
+const calculateSizes = () => {
+  return new Promise((resolve) => {
+    let totalHeight = 0
+    let completedCount = 0
+    const totalItems = slist.value.length
+
+    if (totalItems === 0) {
+      sizeCalcState.value = true
+      resolve()
+      return
+    }
+
+    slist.value.forEach(item => {
+      uni.createSelectorQuery()
+        .select('#main-' + item.id)
+        .fields({ size: true }, (data) => {
+          if (data) {
+            // 记录该分类块的顶部位置
+            item.top = totalHeight
+            // 累加高度
+            totalHeight += data.height
+            // 记录该分类块的底部位置
+            item.bottom = totalHeight
+          }
+
+          completedCount++
+          if (completedCount === totalItems) {
+            sizeCalcState.value = true
+            console.log('尺寸计算完成，总高度:', totalHeight)
+            resolve()
+          }
+        })
+        .exec()
+    })
+  })
+}
+
+/**
+ * 跳转到商品列表页
+ */
+const goToList = (secondId, thirdId) => {
+  uni.navigateTo({
+    url: `/pages/product/list?fid=${currentId.value}&sid=${secondId}&tid=${thirdId}`
+  })
+}
+
+// 页面加载
+onMounted(() => {
+  loadData()
+})
 </script>
 
 <style lang="scss">
+/* 页面基础样式 */
 page,
 .content {
-	height: 100%;
-	background-color: #f8f8f8;
+  height: 100%;
+  background-color: #f8f8f8;
 }
 
 .content {
-	display: flex;
+  display: flex;   /* 使用flex布局实现左右分栏 */
 }
+
+/* 左侧一级分类区域 */
 .left-aside {
-	flex-shrink: 0;
-	width: 200upx;
-	height: 100%;
-	background-color: #fff;
+  flex-shrink: 0;   /* 禁止缩小 */
+  width: 200upx;
+  height: 100%;
+  background-color: #fff;
 }
+
+/* 一级分类项样式 */
 .f-item {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 100%;
-	height: 100upx;
-	font-size: 28upx;
-	color: $font-color-base;
-	position: relative;
-	&.active {
-		color: $base-color;
-		background: #f8f8f8;
-		&:before {
-			content: '';
-			position: absolute;
-			left: 0;
-			top: 50%;
-			transform: translateY(-50%);
-			height: 36upx;
-			width: 8upx;
-			background-color: $base-color;
-			border-radius: 0 4px 4px 0;
-			opacity: 0.8;
-		}
-	}
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100upx;
+  font-size: 28upx;
+  color: $font-color-base;
+  position: relative;
+
+  /* 选中状态 */
+  &.active {
+    color: $base-color;
+    background: #f8f8f8;
+
+    /* 左侧选中指示条 */
+    &:before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 36upx;
+      width: 8upx;
+      background-color: $base-color;
+      border-radius: 0 4px 4px 0;
+      opacity: 0.8;
+    }
+  }
 }
 
+/* 右侧二级分类区域 */
 .right-aside {
-	flex: 1;
-	overflow: hidden;
-	padding-left: 20upx;
+  flex: 1;   /* 占据剩余空间 */
+  overflow: hidden;
+  padding-left: 20upx;
 }
-.s-item {
-	display: flex;
-	align-items: center;
-	height: 70upx;
-	padding-top: 8upx;
-	font-size: 28upx;
-	color: $font-color-dark;
-}
-.t-list {
-	display: flex;
-	flex-wrap: wrap;
-	width: 100%;
-	background: #fff;
-	padding-top: 12upx;
-	&:after {
-		content: '';
-		flex: 99;
-		height: 0;
-	}
-}
-.t-item {
-	flex-shrink: 0;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex-direction: column;
-	width: 176upx;
-	font-size: 26upx;
-	color: #666;
-	padding-bottom: 20upx;
 
-	image {
-		width: 140upx;
-		height: 140upx;
-	}
+/* 二级分类标题 */
+.s-item {
+  display: flex;
+  align-items: center;
+  height: 70upx;
+  padding-top: 8upx;
+  font-size: 28upx;
+  color: $font-color-dark;
+}
+
+/* 三级分类容器 */
+.t-list {
+  display: flex;
+  flex-wrap: wrap;   /* 允许换行 */
+  width: 100%;
+  background: #fff;
+  padding-top: 12upx;
+
+  /* 使用伪元素实现两端对齐 */
+  &:after {
+    content: '';
+    flex: 99;
+    height: 0;
+  }
+}
+
+/* 三级分类项 */
+.t-item {
+  flex-shrink: 0;   /* 禁止缩小 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;   /* 垂直排列 */
+  width: 176upx;
+  font-size: 26upx;
+  color: #666;
+  padding-bottom: 20upx;
+
+  /* 分类图标 */
+  image {
+    width: 140upx;
+    height: 140upx;
+  }
 }
 </style>
