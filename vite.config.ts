@@ -38,12 +38,22 @@ font-size: 16px + 2upx;  // ❌ 编译错误
       port: +env.VITE_APP_PORT,
       open: true,
       // 代理配置只在 H5（浏览器）开发时生效。 其他平台（如小程序、App）在开发时不使用 Vite 的开发服务器，它们直接运行在各自的环境中。
+
       proxy: {
         [env.VITE_APP_BASE_API]: {
           changeOrigin: true,
           target: env.VITE_APP_API_URL,
           rewrite: (path) => path.replace(new RegExp("^" + env.VITE_APP_BASE_API), ""),
         },
+
+        //小程序不需要代理
+        //问题在于：你的登录接口路径是 /aioveu-auth/oauth2/token，并不以 /api开头，所以不会被代理到 http://localhost:9999，
+        // 而是被发送到了 Vite 的开发服务器 http://192.168.1.2:9000！
+        [env.VITE_APP_LOGIN_API]: {
+          changeOrigin: true,
+          target: env.VITE_APP_API_URL
+        },
+
       },
     },
     plugins: [
