@@ -5,11 +5,11 @@ import request from '@/utils/request'
  * 
  * @param {Object} params
  */
-export function listSpuPages(params) {
+export function listSpuPages(params:any) {
 	return request({
 		url: '/aioveu-pms/app-api/v1/spu/pages',
-		method: 'get',
-		params: params
+		method: "GET",
+    data: params,
 	})
 }
 
@@ -21,7 +21,7 @@ export function listSpuPages(params) {
 export function listSeckillingSpus() {
 	return request({
 		url: '/aioveu-pms/app-api/v1/spu/seckilling',
-		method: 'get',
+		method: "GET",
 	})
 }
 
@@ -30,10 +30,10 @@ export function listSeckillingSpus() {
  *
  * @param {Object} spuId
  */
-export function getSpuDetail(spuId) {
+export function getSpuDetail(spuId: number) {
 	return request({
 		url: '/aioveu-pms/app-api/v1/spu/' + spuId,
-		method: 'get'
+		method: "GET"
 	})
 }
 

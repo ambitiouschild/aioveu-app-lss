@@ -112,7 +112,7 @@
 			margin-right:10upx;
 		}
 		.cell-tip{
-			font-size: $font-sm+2upx;
+			font-size: $font-sm+ 1px;
 			color: $font-color-light;
 		}
 	}

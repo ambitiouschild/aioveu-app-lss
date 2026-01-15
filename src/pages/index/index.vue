@@ -15,7 +15,7 @@
       <swiper class="carousel" circular @change="swiperChange">
         <swiper-item v-for="(item, index) in carouselList" :key="index" class="carousel-item"
                      @click="navToDetailPage({title: item.title})">
-          <image :src="item.picUrl" />
+          <image :src="item.imageUrl" />   <!-- 这里用 imageUrl，不是 picUrl -->
         </swiper-item>
       </swiper>
       <!-- 自定义swiper指示器 -->
@@ -139,15 +139,26 @@ export default {
     async loadData() {
       const that = this
       getAdvertList().then(response => {
-        const data = response.data
+        const data = response
+
+        console.log("获取广告列表data：{}",data);
+
         if (data) {
           that.swiperLength = data.length
           that.carouselList = data
+
+          //在 Vue 3 中，当你用 ref()或 reactive()包装数据时，Vue 会创建一个 Proxy 代理对象 来跟踪数据变化。
+          // console.log("获取广告列表carouselList：{}",that.carouselList);
         }
       })
 
+
+
       listSeckillingSpus().then(response => {
-        that.goodsList = response.data || [];
+
+        console.log("获取秒杀商品列表data：{}",response);
+
+        that.goodsList = response || [];
       })
     },
     onShareAppMessage() {
@@ -302,7 +313,7 @@ page {
 
 .carousel {
   width: 100%;
-  height: 350upx;
+  height: 500upx;   /* 修改这个值 */
 
   .carousel-item {
     width: 100%;
@@ -362,7 +373,7 @@ page {
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-size: $font-sm + 2upx;
+    font-size: $font-sm + 1px;
     color: $font-color-dark;
   }
 
@@ -418,7 +429,7 @@ page {
       text-align: center;
       line-height: 36upx;
       margin-right: 14upx;
-      font-size: $font-sm + 2upx;
+      font-size: $font-sm + 1px;
       color: #fff;
       border-radius: 2px;
       background: rgba(0, 0, 0, .8);
@@ -444,7 +455,7 @@ page {
   .floor-item {
     width: 150upx;
     margin-right: 20upx;
-    font-size: $font-sm + 2upx;
+    font-size: $font-sm + 1px;
     color: $font-color-dark;
     line-height: 1.8;
 
@@ -482,7 +493,7 @@ page {
 
   .tit {
     // 在 + 和 2 之间加空格
-    font-size: $font-lg + 2upx;
+    font-size: $font-lg + 1px;
     color: $font-color-dark;
     line-height: 1.3;
   }
@@ -493,7 +504,7 @@ page {
   }
 
   .icon-you {
-    font-size: $font-lg + 2upx;
+    font-size: $font-lg + 1px;
     color: $font-color-light;
   }
 }
@@ -545,7 +556,7 @@ page {
 
   .t-box {
     height: 160upx;
-    font-size: $font-base + 2upx;
+    font-size: $font-base + 1px;
     color: $font-color-dark;
     line-height: 1.6;
   }
@@ -555,7 +566,7 @@ page {
   }
 
   .m-price {
-    font-size: $font-sm + 2upx;
+    font-size: $font-sm + 1px;
     text-decoration: line-through;
     color: $font-color-light;
     margin-left: 8upx;
@@ -626,7 +637,7 @@ page {
   .floor-item {
     width: 180upx;
     margin-right: 20upx;
-    font-size: $font-sm + 2upx;
+    font-size: $font-sm + 1px;
     color: $font-color-dark;
     line-height: 1.8;
 

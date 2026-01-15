@@ -3,7 +3,7 @@
 		<view class="user-section">
 			<image class="bg" src="/static/pages/user/user-bg2.png"></image>
 			<view class="user-info-box">
-				<view class="portrait-box" @click="hasLogin == false && navTo('/pages/login/login')">
+				<view class="portrait-box" @click="hasLogin == false && navTo('/packageA/pages/login/login')">
 					<image class="portrait" :src="avatar || '/static/pages/user/missing-face.png'"></image>
 				</view>
 				<view class="info-box">
@@ -77,52 +77,57 @@
 				</view>
 				<scroll-view scroll-x class="h-list">
 					<image
-						@click="navTo('/pages/product/product')"
+						@click="navTo('/packageC/pages/product/product')"
 						src="https://minio.aioveu.com/aioveu/20251128/9dc40c944d044c8d8ae37b14a35b8b83.png"
 						mode="aspectFill"
 					></image>
 					<image
-						@click="navTo('/pages/product/product')"
+						@click="navTo('/packageC/pages/product/product')"
 						src="https://minio.aioveu.com/aioveu/20251128/9dc40c944d044c8d8ae37b14a35b8b83.png"
 						mode="aspectFill"
 					></image>
 					<image
-						@click="navTo('/pages/product/product')"
+						@click="navTo('/packageC/pages/product/product')"
 						src="https://minio.aioveu.com/aioveu/20251128/9dc40c944d044c8d8ae37b14a35b8b83.png"
 						mode="aspectFill"
 					></image>
 					<image
-						@click="navTo('/pages/product/product')"
+						@click="navTo('/packageC/pages/product/product')"
 						src="https://minio.aioveu.com/aioveu/20251128/9dc40c944d044c8d8ae37b14a35b8b83.png"
 						mode="aspectFill"
 					></image>
 				
 					<image
-						@click="navTo('/pages/product/product')"
+						@click="navTo('/packageC/pages/product/product')"
 						src="https://minio.aioveu.com/aioveu/20251128/9dc40c944d044c8d8ae37b14a35b8b83.png"
 						mode="aspectFill"
 					></image>
 					<image
-						@click="navTo('/pages/product/product')"
+						@click="navTo('/packageC/pages/product/product')"
 						src="https://minio.aioveu.com/aioveu/20251128/9dc40c944d044c8d8ae37b14a35b8b83.png"
 						mode="aspectFill"
 					></image>
 				</scroll-view>
 <!--        图标是使用字体图标（font icon）的方式，而不是图片-->
 				<list-cell icon="icon-iconfontweixin" iconColor="#e07472" title="我的钱包" tips="您的会员还有3天过期"></list-cell>
-				<list-cell icon="icon-dizhi" iconColor="#5fcda2" title="地址管理" @eventClick="navTo('/pages/address/address')"></list-cell>
+				<list-cell icon="icon-dizhi" iconColor="#5fcda2" title="地址管理" @eventClick="navTo('/packageA/pages/mine/address/address')"></list-cell>
 				<list-cell icon="icon-share" iconColor="#9789f7" title="分享" tips="邀请好友赢10万大礼"></list-cell>
 				<list-cell icon="icon-pinglun-copy" iconColor="#ee883b" title="晒单" tips="晒单抢红包"></list-cell>
 				<list-cell icon="icon-shoucang_xuanzhongzhuangtai" iconColor="#54b4ef" title="我的收藏"></list-cell>
-				<list-cell icon="icon-shezhi1" iconColor="#e07472" title="设置" border="" @eventClick="navTo('/pages/set/set')"></list-cell>
+				<list-cell icon="icon-shezhi1" iconColor="#e07472" title="设置" border="" @eventClick="navTo('/packageA/pages/mine/settings/set')"></list-cell>
 			</view>
 		</view>
 	</view>
 </template>
 <script>
 import listCell from '@/components/mix-list-cell';
-// import { mapGetters } from 'vuex';
 import { useUserStore } from '@/store';
+import { onShow, onHide } from '@dcloudio/uni-app';
+
+
+const userStore = useUserStore();
+
+
 let startY = 0,
 	moveY = 0,
 	pageAtTop = true;
@@ -134,15 +139,24 @@ export default {
 		return {
 			coverTransform: 'translateY(0px)',
 			coverTransition: '0s',
-			moving: false
+			moving: false,
+      balance: 0,      // 余额
+      couponCount: 0,  // 优惠券数量
+      points: 0,       // 积分
+      isLoading: false
 		};
 	},
+  onShow() {
+    console.log('个人中心页面显示');
+    this.loadUserData();
+  },
+
 	onLoad() {},
 	// #ifndef MP
 	onNavigationBarButtonTap(e) {
 		const index = e.index;
 		if (index === 0) {
-			this.navTo('/pages/set/set');
+			this.navTo('/packageA/pages/set/set');
 		} else if (index === 1) {
 			// #ifdef APP-PLUS
 			const pages = getCurrentPages();
@@ -159,41 +173,152 @@ export default {
 	},
 	// #endif
 	computed: {
-    // 使用 Pinia 获取登录状态
+// 使用 Pinia 获取登录状态
     hasLogin() {
-      const userStore = useUserStore();
-      return userStore.hasLogin;
+      return userStore.hasLogin && userStore.token;
     },
-    // 使用 Pinia 获取登录状态
+
+    // 昵称
     nickname() {
-      const userStore = useUserStore();
-      return userStore.hasLogin;
+      if (userStore.userInfo) {
+        return userStore.userInfo.nickName || userStore.userInfo.username || '用户';
+      }
+      return '游客';
     },
-    // 使用 Pinia 获取登录状态
+
+    // nickname(){ return userStore.nickName},
+
+    // 头像
     avatar() {
-      const userStore = useUserStore();
-      return userStore.hasLogin;
+      if (userStore.userInfo) {
+        // 确保头像地址是完整的URL
+        console.log("头像地址：{}", userStore.userInfo);
+        let avatar = userStore.userInfo.avatarUrl || '';
+        if (avatar && !avatar.startsWith('http') && !avatar.startsWith('https')) {
+          // 如果是相对路径，添加基础URL
+          avatar = 'https://你的图片服务器地址' + avatar;
+        }
+        return avatar;
+      }
+      return '/static/pages/user/missing-face.png';
     },
-    // 使用 Pinia 获取登录状态
-    balance() {
-      const userStore = useUserStore();
-      return userStore.hasLogin;
+
+    // 用户ID
+    userId() {
+      return userStore.userInfo?.id || '';
+    },
+
+    // 用户名
+    username() {
+      return userStore.userInfo?.username || '';
     }
 	},
 	methods: {
-		/**
-		 * 统一跳转接口,拦截未登录路由
-		 * navigator标签现在默认没有转场动画，所以用view
-		 */
-		navTo(url) {
-			console.log('跳转路径', url);
-			if (!this.hasLogin) {
-				url = '/pages/login/login';
-			}
-			uni.navigateTo({
-				url
-			});
-		},
+
+    /**
+     * 加载用户数据
+     */
+    async loadUserData() {
+      if (this.isLoading) return;
+
+      const userStore = useUserStore();
+
+      // 如果未登录，不加载数据
+      if (!this.hasLogin) {
+        console.log('用户未登录，不加载数据');
+        return;
+      }
+
+      this.isLoading = true;
+
+      try {
+        console.log('开始加载用户数据');
+
+        // 1. 获取用户详细信息
+        if (!userStore.userInfo) {
+          console.log('用户信息不存在，重新获取');
+          await userStore.getInfo();
+        }
+
+        // console.log('当前用户信息:', userStore.userInfo);
+
+        // 2. 获取用户资产信息（余额、积分、优惠券等）
+        await this.loadUserAssets();
+
+      } catch (error) {
+        console.error('加载用户数据失败:', error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    /**
+     * 加载用户资产信息
+     */
+    async loadUserAssets() {
+      try {
+        // 这里应该调用你的API接口获取用户资产信息
+        // 暂时使用模拟数据
+        const userStore = useUserStore();
+
+        // 模拟API调用
+        // const assets = await this.$api.getUserAssets();
+
+        // 使用用户信息中的余额字段，或者默认值
+        this.balance = userStore.userInfo?.balance || 0;
+        this.points = userStore.userInfo?.points || 0;
+        this.couponCount = userStore.userInfo?.couponCount || 0;
+
+        // console.log('用户资产加载完成:', {
+        //   balance: this.balance,
+        //   points: this.points,
+        //   couponCount: this.couponCount
+        // });
+
+      } catch (error) {
+        console.error('加载用户资产失败:', error);
+      }
+    },
+
+    /**
+     * 统一跳转接口,拦截未登录路由
+     */
+    navTo(url) {
+      console.log('跳转路径:', url);
+
+      // 需要登录的页面
+      const needLoginPages = [
+        '/pages/order/order',
+        '/pages/vip/vip',
+        '/packageA/pages/mine/address/address',
+        '/packageA/pages/mine/settings/set'
+      ];
+
+      const needLogin = needLoginPages.some(page => url.includes(page));
+
+      if (needLogin && !this.hasLogin) {
+        console.log('需要登录，跳转到登录页');
+        uni.showModal({
+          title: '提示',
+          content: '请先登录',
+          success: (res) => {
+            if (res.confirm) {
+              uni.navigateTo({
+                url: '/packageA/pages/login/login',
+                animationType: 'slide-in-right'
+              });
+            }
+          }
+        });
+        return;
+      }
+
+      // 普通跳转
+      uni.navigateTo({
+        url,
+        animationType: 'slide-in-right'
+      });
+    },
 
 		/**
 		 *  会员卡下拉和回弹
@@ -283,7 +408,7 @@ export default {
 	}
 
 	.username {
-		font-size: $font-lg + 6upx;
+		font-size: $font-lg + 1px;
 		color: $font-color-dark;
 		margin-left: 20upx;
 	}
@@ -332,7 +457,7 @@ export default {
 	}
 
 	.tit {
-		font-size: $font-base + 2upx;
+		font-size: $font-base + 1px;
 		color: #f7d680;
 		margin-bottom: 28upx;
 

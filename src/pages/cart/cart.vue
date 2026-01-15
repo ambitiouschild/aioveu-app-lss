@@ -263,7 +263,7 @@ import { useUserStore } from '@/store';
 
 			.empty-tips {
 				display: flex;
-				font-size: $font-sm + 2upx;
+				font-size: $font-sm + 1px;
 				color: $font-color-disabled;
 
 				.navigator {
@@ -314,14 +314,14 @@ import { useUserStore } from '@/store';
 
 			.title,
 			.price {
-				font-size: $font-base + 2upx;
+				font-size: $font-base + 1px;
 				color: $font-color-dark;
 				height: 40upx;
 				line-height: 40upx;
 			}
 
 			.attr {
-				font-size: $font-sm + 2upx;
+				font-size: $font-sm + 1px;
 				color: $font-color-light;
 				height: 50upx;
 				line-height: 50upx;
@@ -360,11 +360,11 @@ import { useUserStore } from '@/store';
 		border-radius: 16upx;
 
 		.checkbox {
-			height: 52upx;
+			height: 51px;
 			position: relative;
 
 			image {
-				width: 52upx;
+				width: 51px;
 				height: 100%;
 				position: relative;
 				z-index: 5;
@@ -377,8 +377,8 @@ import { useUserStore } from '@/store';
 			top: 0;
 			z-index: 4;
 			width: 0;
-			height: 52upx;
-			line-height: 52upx;
+			height: 51px;
+			line-height: 51px;
 			padding-left: 38upx;
 			font-size: $font-base;
 			color: #fff;
@@ -421,7 +421,7 @@ import { useUserStore } from '@/store';
 			border-radius: 100px;
 			height: 76upx;
 			line-height: 76upx;
-			font-size: $font-base + 2upx;
+			font-size: $font-base + 1px;
 			background: $uni-color-primary;
 			box-shadow: 1px 2px 5px rgba(217, 60, 93, 0.72);
 		}
