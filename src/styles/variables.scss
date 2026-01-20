@@ -43,6 +43,8 @@ $border-width-base: 1px;
 $border-style-base: solid;
 $border-color-base: $border-color;
 
+// 颜色变量  方案B：在项目全局文件中定义SCSS变量
+$bg-color: #f8f8f8;
 // CSS 自定义属性
 :root {
   --primary-color: #165dff;

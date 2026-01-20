@@ -43,18 +43,7 @@
       "independent": true,
       "pages": [
 
-        {
-          "path": "pages/mine/address/address",
-          "style": {
-            "navigationBarTitleText": "收货地址"
-          }
-        },
-        {
-          "path": "pages/mine/address/addressManage",
-          "style": {
-            "navigationBarTitleText": "收货地址管理"
-          }
-        },
+
 
 
         {
@@ -200,6 +189,12 @@
             "navigationBarTitleText": "商品详情"
           }
         },
+        {
+          "path": "pages/product/list",
+          "style": {
+            "navigationBarTitleText": "商品列表页"
+          }
+        },
 
         {
           "path": "pages/aioveu_department/department/index",
@@ -282,6 +277,35 @@
       "root": "packageD",
       "independent": true,
       "pages": [
+
+        {
+          "path": "pages/order/createOrder",
+          "style": {
+            "navigationBarTitleText": "创建订单"
+          }
+        },
+
+        {
+          "path": "pages/address/addressManage",
+          "style": {
+            "navigationBarTitleText": "收货地址管理"
+          }
+        },
+
+        {
+          "path": "pages/address/address",
+          "style": {
+            "navigationBarTitleText": "收货地址"
+          }
+        },
+
+        {
+          "path": "pages/order/order",
+          "style": {
+            "navigationBarTitleText": "订单"
+          }
+        },
+
         {
           "path": "pages/aioveu_material/category/index",
           "style": {

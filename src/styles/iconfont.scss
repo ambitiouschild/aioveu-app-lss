@@ -1,4 +1,6 @@
 // src/styles/iconfont.scss
+
+//字体定义：@font-face { font-family: yticon; }
 @font-face {
   font-family: yticon;
   font-weight: normal;
@@ -6,6 +8,7 @@
   src: url('https://at.alicdn.com/t/font_1078604_w4kpxh0rafi.ttf') format('truetype');
 }
 
+//通用类：.yticon { font-family: "yticon"; }
 .yticon {
   font-family: "yticon" !important;
   font-size: 16px;
@@ -14,7 +17,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-// 图标定义
+// 图标定义 图标定义：.icon-bianji:before { content: "\e646"; }
 .icon-yiguoqi1:before { content: "\e700"; }
 .icon-iconfontshanchu1:before { content: "\e619"; }
 .icon-iconfontweixin:before { content: "\e611"; }
@@ -34,6 +37,12 @@
 .icon-gouwuche_:before { content: "\e630"; }
 .icon-icon-test:before { content: "\e60c"; }
 .icon-icon-test1:before { content: "\e632"; }
+
+//ddress.vue文件位于 packageD这个分包中。在 uni-app 中，分包的样式作用域是独立的，这会导致字体图标无法正常显示。
+//1.字体图标在 App.vue 中全局引入，但分包有自己的样式作用域
+//2.分包的页面可能无法继承主包的全局样式
+
+
 .icon-bianji:before { content: "\e646"; }
 .icon-jiazailoading-A:before { content: "\e8fc"; }
 .icon-zuoshang:before { content: "\e613"; }

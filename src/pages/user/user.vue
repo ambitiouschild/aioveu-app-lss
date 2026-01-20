@@ -11,7 +11,7 @@
 				</view>
 			</view>
 			<view class="vip-card-box">
-				<image class="card-bg" src="/static/vip-card-bg.png" mode=""></image>
+				<image class="card-bg" src="/static/tabbar/cart/vip-card-bg.png" mode=""></image>
 				<view class="b-btn">立即开通</view>
 				<view class="tit">
 					<text class="yticon icon-iLinkapp-"></text>
@@ -110,7 +110,7 @@
 				</scroll-view>
 <!--        图标是使用字体图标（font icon）的方式，而不是图片-->
 				<list-cell icon="icon-iconfontweixin" iconColor="#e07472" title="我的钱包" tips="您的会员还有3天过期"></list-cell>
-				<list-cell icon="icon-dizhi" iconColor="#5fcda2" title="地址管理" @eventClick="navTo('/packageA/pages/mine/address/address')"></list-cell>
+				<list-cell icon="icon-dizhi" iconColor="#5fcda2" title="地址管理" @eventClick="navTo('/packageA/pages/address/address')"></list-cell>
 				<list-cell icon="icon-share" iconColor="#9789f7" title="分享" tips="邀请好友赢10万大礼"></list-cell>
 				<list-cell icon="icon-pinglun-copy" iconColor="#ee883b" title="晒单" tips="晒单抢红包"></list-cell>
 				<list-cell icon="icon-shoucang_xuanzhongzhuangtai" iconColor="#54b4ef" title="我的收藏"></list-cell>
@@ -290,7 +290,7 @@ export default {
       const needLoginPages = [
         '/pages/order/order',
         '/pages/vip/vip',
-        '/packageA/pages/mine/address/address',
+        '/packageA/pages/address/address',
         '/packageA/pages/mine/settings/set'
       ];
 

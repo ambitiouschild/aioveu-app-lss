@@ -259,7 +259,7 @@ const calculateSizes = () => {
  */
 const goToList = (secondId, thirdId) => {
   uni.navigateTo({
-    url: `/pages/product/list?fid=${currentId.value}&sid=${secondId}&tid=${thirdId}`
+    url: `/packageC/pages/product/list?fid=${currentId.value}&sid=${secondId}&tid=${thirdId}`
   })
 }
 

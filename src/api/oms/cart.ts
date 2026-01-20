@@ -5,8 +5,8 @@ import request from '@/utils/request'
 export function getCart() {
 	return request({
 		url: '/aioveu-oms/app-api/v1/carts',
-		method: 'get',
-		headers: {
+		method: "GET",
+		header: {
 			'auth': true // 需要认证
 		}
 	})
@@ -16,12 +16,12 @@ export function getCart() {
  * 全选/全不选
  * @param {Object} params
  */
-export function checkAll(params) {
+export function checkAll(params :any) {
 	return request({
 		url: '/aioveu-oms/app-api/v1/carts/_check',
-		method: 'patch',
-		params: params,
-		headers: {
+		method: "PUT",
+    data: params,
+		header: {
 			'auth': true
 		}
 	})
@@ -32,8 +32,8 @@ export function checkAll(params) {
 export function deleteCart() {
 	return request({
 		url: '/aioveu-oms/app-api/v1/carts',
-		method: 'delete',
-		headers: {
+		method: "DELETE",
+		header: {
 			'auth': true
 		}
 	})
@@ -41,26 +41,27 @@ export function deleteCart() {
 
 
 // 添加购物车
-export function addCartItem(skuId) {
+export function addCartItem(skuId :any , count = 1) {
 	return request({
 		url: '/aioveu-oms/app-api/v1/carts',
-		method: 'post',
-		params: {
-			skuId: skuId
+		method: "POST",
+    data: {
+			skuId: skuId,
+      count: count
 		},
-		headers: {
+		header: { // 使用 data 传递参数
 			'auth': true
 		}
 	})
 }
 
 // 更新购物车商品
-export function updateCartItem(skuId, data) {
+export function updateCartItem(skuId :any, data :any) {
 	return request({
 		url: '/aioveu-oms/app-api/v1/carts/skuId/' + skuId,
-		method: 'put',
+		method: "PUT",
 		data: data,
-		headers: {
+		header: {
 			'auth': true
 		}
 	})
@@ -68,11 +69,12 @@ export function updateCartItem(skuId, data) {
 
 
 // 批量删除购物车商品
-export function removeCartItem(skuId) {
+export function removeCartItem(skuId :any , count = 1) {
 	return request({
+
 		url: '/aioveu-oms/app-api/v1/carts/skuId/' + skuId,
-		method: 'delete',
-		headers: {
+		method: "DELETE",
+		header: {
 			'auth': true
 		}
 	})
