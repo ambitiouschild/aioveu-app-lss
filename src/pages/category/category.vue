@@ -22,7 +22,7 @@
       :scroll-top="tabScrollTop"
     >
       <view
-        v-for="item in currentSecondList"
+        v-for="item in safeSlist"
         :key="item.id"
         class="s-list"
         :id="'main-' + item.id"
@@ -46,30 +46,57 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted  } from 'vue'
 import { getCategoryList } from '@/api/pms/category'
 
 //Vue 2 的 Options API 和 Vue 3 的 Composition API
 //✅ 纯 Vue 3 Composition API
 //✅ 正确的响应式数据访问
 
+
+// 缓存配置
+const CACHE_CONFIG = {
+  DURATION: 3 * 60 * 1000, // 3分钟缓存
+  VERSION_KEY: 'category_version',
+  TIMESTAMP_KEY: 'category_timestamp'
+}
+
 // 响应式数据
 const sizeCalcState = ref(false)  // 是否已计算尺寸
 const tabScrollTop = ref(0)       // 右侧滚动位置
+const loading = ref(false)
 const currentId = ref(0)          // 当前选中的一级分类ID
 const flist = ref([])             // 一级分类列表
 const slist = ref([])             // 二级分类列表
 const tlist = ref([])             // 三级分类列表
 const defaultImageUrl = '/static/default-category.png'  // 默认图片
+const lastLoadTime = ref(0)
+// 添加一个数据版本标记
+const dataVersion = ref(0)
 
 // 计算属性：安全的二级分类列表  显示顺序依赖数据顺序  safeSlist直接使用 slist.value的顺序
 const safeSlist = computed(() => {
+
+  // 添加 dataVersion 作为依赖，确保数据更新时重新计算
+  dataVersion.value
+
+  console.log('safeSlist 重新计算，数据版本:', dataVersion.value)
+
+  console.log(`获取分类 ${currentId.value} 的二级列表`)
+
   return slist.value.filter(item => item && item.id && item.name)
 })
 
 // 只需要修改显示逻辑，不需要改排序逻辑
 const currentSecondList = computed(() => {
+
+  // 添加 dataVersion 作为依赖，确保数据更新时重新计算
+  dataVersion.value
+
   if (!currentId.value) return []
+
+  console.log(`获取分类 ${currentId.value} 的二级列表`)
+
   return slist.value
     .filter(item => item.parentId === currentId.value)
   // 你的排序逻辑仍然有效
@@ -77,7 +104,9 @@ const currentSecondList = computed(() => {
 
 // 计算属性：获取指定二级分类下的三级分类  getThirdCategories返回的也是 tlist.value的顺序  所以显示顺序完全由数据顺序决定
 const getThirdCategories = (secondId) => {
+
   if (!secondId) return []
+
   return tlist.value.filter(titem => titem && titem.parentId === secondId)
 }
 
@@ -140,7 +169,12 @@ const realEcommerceSort = {
 /**
  * 加载分类数据
  */
-const loadData = async () => {
+const loadData = async (force = false) => {
+
+  // 如果已经在加载中，避免重复加载
+  if (loading.value && !force) return
+
+  loading.value = true
   try {
     console.log("调用API获取分类数据:")
     const response = await getCategoryList()
@@ -150,7 +184,7 @@ const loadData = async () => {
       return
     }
 
-    const categoryList = response  // ✅ 修复：应该是 response.data
+    const categoryList = response  // ✅ 修复：应该是 response
     console.log("分类数据:", categoryList)
 
     // 重置数据
@@ -204,6 +238,12 @@ const loadData = async () => {
     // 排序
     sortCategories()
 
+
+    // 更新数据版本
+    dataVersion.value++
+    localStorage.setItem(CACHE_CONFIG.VERSION_KEY, dataVersion.value)
+    localStorage.setItem(CACHE_CONFIG.TIMESTAMP_KEY, Date.now())
+
     // 默认选中第一个
     if (flist.value.length > 0) {
       currentId.value = flist.value[0].id
@@ -215,10 +255,56 @@ const loadData = async () => {
       三级分类: tlist.value.length
     })
 
+    console.log("数据加载完成，版本:", dataVersion.value)
+
   } catch (error) {
     console.error("加载失败:", error)
   }
 }
+
+
+/**
+ * 添加其他刷新触发
+ */
+// 1. 下拉刷新
+const enablePullToRefresh = () => {
+  // 小程序或H5的下拉刷新
+}
+
+// 2. 定时刷新
+let refreshTimer
+const startAutoRefresh = () => {
+  // 每5分钟刷新一次
+  refreshTimer = setInterval(() => {
+    console.log('定时刷新分类数据')
+    loadData()
+  }, 5 * 60 * 1000)
+}
+
+// 3. 页面可见性变化
+const handleVisibilityChange = () => {
+  if (!document.hidden) {
+    // 页面重新可见，检查是否需要刷新
+    const lastTime = localStorage.getItem(CACHE_CONFIG.TIMESTAMP_KEY) || 0
+    if (Date.now() - lastTime > CACHE_CONFIG.DURATION) {
+      console.log('页面重新显示，刷新数据')
+      loadData()
+    }
+  }
+}
+
+// 4. 网络状态变化
+const handleOnlineStatus = () => {
+  if (navigator.onLine) {
+    console.log('网络恢复，刷新数据')
+    loadData()
+  }
+}
+
+
+
+
+
 //----------------------------------------------------------------------------------------------------
 /**
  * 创建层级排序比较器（柯里化版本）
@@ -477,22 +563,97 @@ const sortCategories = () => {
 }
 //-------------------------------------------------------------------------------------------------------
 /**
- * 点击一级分类
+ * 点击一级分类  点击分类 - 智能刷新策略
  */
 const tabtap = async (item) => {
+
+  console.log('点击分类:', item.name)
   // 更新当前选中的分类ID
   currentId.value = item.id
 
-  // 如果还没计算过尺寸，先计算
-  if (!sizeCalcState.value) {
-    await calculateSizes()
+  const now = Date.now()
+  const timeSinceLastLoad = now - lastLoadTime.value
+
+  // 判断是否需要刷新
+  const shouldRefresh = checkShouldRefresh(item.id, timeSinceLastLoad)
+
+
+  if (shouldRefresh) {
+    console.log('执行刷新，上次刷新:', Math.floor(timeSinceLastLoad/1000), '秒前')
+    await loadData()
+    lastLoadTime.value = now
+  } else {
+    console.log('使用缓存，跳过网络请求')
   }
 
-  // 找到对应的二级分类，滚动到该位置
-  const index = slist.value.findIndex(sitem => sitem.parentId == item.id)
-  if (index !== -1 && slist.value[index].top !== undefined) {
-    tabScrollTop.value = slist.value[index].top
+
+//是的，如果是点击展开的方案，需要重新加载数据，因为是在前端做缓存而不是实时更新。但更好的方案是使用响应式自动更新
+  //方案1：实时刷新（推荐）
+  //方案2：WebSocket 实时推送（高级方案）
+  //方案3：轮询检查（简单但耗资源）
+
+
+  //对于点击展开的方案，不需要每次点击都重新加载数据，
+  //最佳实践：使用响应式计算属性 不需要每次点击都重新加载数据，只需确保数据是最新的。
+  //使用数据版本控制 + 手动刷新按钮 + 页面显示事件监听，这样用户体验最好。
+
+/*  关键改进点：
+
+  数据版本控制：添加 dataVersion触发重新计算
+  条件加载：避免重复加载相同数据
+  手动刷新：提供刷新按钮
+  下拉刷新：支持下拉刷新
+  页面事件监听：页面显示时刷新
+  缓存检查：避免不必要的网络请求*/
+
+  try {
+
+    // 如果还没计算过尺寸，先计算  // 滚动到对应位置
+        if (!sizeCalcState.value) {
+          await calculateSizes()
+        }
+
+        // 找到对应的二级分类，滚动到该位置
+        const index = slist.value.findIndex(sitem => sitem.parentId == item.id)
+        if (index !== -1 && slist.value[index].top !== undefined) {
+          tabScrollTop.value = slist.value[index].top
+        }
+  } catch (error) {
+    console.error('加载分类数据失败:', error)
+  } finally {
+    loading.value = false
   }
+}
+
+/**
+ * 检查是否需要刷新
+ */
+const checkShouldRefresh = (categoryId, timeSinceLastLoad) => {
+  // 条件1：首次加载
+  if (lastLoadTime.value === 0) return true
+
+  // 条件2：超过缓存时间（3分钟）
+  if (timeSinceLastLoad > CACHE_CONFIG.DURATION) return true
+
+  // 条件3：这个分类的数据可能不完整
+  const hasCategoryData = slist.value.some(item => item.parentId === categoryId)
+  if (!hasCategoryData) return true
+
+  // 条件4：网络很好，可以刷新
+  if (navigator.connection?.effectiveType === '4g') {
+    // 4G网络下，1分钟以上就刷新
+    if (timeSinceLastLoad > 60 * 1000) return true
+  }
+
+  return false
+}
+
+/**
+ * 刷新分类数据
+ */
+const refreshCategories = async () => {
+  console.log('手动刷新分类数据')
+  await loadData(true)  // force = true
 }
 
 /**
@@ -569,7 +730,27 @@ const goToList = (secondId, thirdId) => {
 // 页面加载
 onMounted(() => {
   loadData()
+
+  // 启动定时刷新
+  startAutoRefresh()
+
+  // 监听页面可见性
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+
+  // 监听网络状态
+  window.addEventListener('online', handleOnlineStatus)
+
+
 })
+
+onUnmounted(() => {
+  // 清理
+  clearInterval(refreshTimer)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
+  window.removeEventListener('online', handleOnlineStatus)
+})
+
+
 </script>
 
 <style lang="scss">
