@@ -307,6 +307,32 @@
         },
 
         {
+          "path": "pages/order/detail",
+          "style": {
+            "navigationBarTitleText": "订单详情"
+          }
+        },
+
+        {
+          "path": "pages/money/money",
+          "style": {
+            "navigationBarTitleText": "我的钱包"
+          }
+        },
+        {
+          "path": "pages/money/pay",
+          "style": {
+            "navigationBarTitleText": "支付"
+          }
+        },
+        {
+          "path": "pages/money/paySuccess",
+          "style": {
+            "navigationBarTitleText": "支付成功"
+          }
+        },
+
+        {
           "path": "pages/aioveu_material/category/index",
           "style": {
             "navigationBarTitleText": "物资分类管理"

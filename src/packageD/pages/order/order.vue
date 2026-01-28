@@ -27,6 +27,7 @@
         v-for="(tabItem, tabIndex) in navList"
         :key="tabIndex"
       >
+<!--        你设置了 @scrolltolower="loadData"事件，每次滚动到底部都会触发 loadData，但没有检查是否已经加载完毕。需要添加加载状态检查和分页控制。-->
         <scroll-view
           class="list-scroll-content"
           scroll-y
@@ -44,10 +45,15 @@
             <!-- 订单顶部信息：时间、状态、操作按钮 -->
             <view class="i-top b-b">
               <text class="time">{{ formatTime(order.createTime) }}</text>
-              <text class="status" :style="{color: '#fa436a'}">{{ getOrderStatusText(order.status) }}</text>
+<!--              给不同订单状态设置不同的颜色-->
+              <text class="status"
+                    :style="{color: getStatusColor(order.status)}"
+              >
+                {{ getOrderStatusText(order.status) }}
+              </text>
               <!-- 已关闭订单显示删除按钮 -->
               <text
-                v-if="order.status === 102 || order.status === 103"
+                v-if="order.status === 5 || order.status === 6"
                 class="del-btn yticon icon-iconfontshanchu1"
                 @click="deleteOrder(order.id)"
               ></text>
@@ -88,8 +94,8 @@
                   mode="aspectFill"
                 ></image>
                 <view class="right">
-                  <text class="title clamp">{{ orderItem.spuName }}</text>
-                  <text class="attr-box">{{ orderItem.skuName }} x {{ orderItem.quantity }}</text>
+                  <text class="title clamp">{{ orderItem.spuName || '商品'}}</text>
+                  <text class="attr-box">{{ orderItem.skuName || ''}} x {{ orderItem.quantity || 1  }}</text>
                   <text class="price">¥{{ formatMoney(orderItem.price) }}</text>
                 </view>
               </view>
@@ -151,6 +157,15 @@ const reload = ref(false);                  // 是否重新加载
 const status = ref('more');                 // 加载状态
 const tabCurrentIndex = ref(0);             // 当前选中的标签索引
 
+
+/*简化后的优势：
+1.状态清晰：只有6个核心状态
+2.数字连续：1-6，便于理解和维护
+3.扩展性好：如果需要细分状态，可以添加子状态
+4.国际化友好：有明确的编码和描述
+5.前端友好：状态码简单，便于前端处理
+6.业务逻辑清晰：状态流转规则明确*/
+
 // 导航标签列表
 const navList = ref([
   {
@@ -161,28 +176,28 @@ const navList = ref([
     loaded: false
   },
   {
-    status: 101,        // 待付款
+    status: 1,        // 待付款
     text: '待付款',
     loadingType: 'more',
     orderList: [],
     loaded: false
   },
   {
-    status: 201,        // 已付款
-    text: '已付款',
-    loadingType: 'more',
-    orderList: [],
-    loaded: false
-  },
-  {
-    status: 301,        // 待发货
+    status: 2,        // 待发货
     text: '待发货',
     loadingType: 'more',
     orderList: [],
     loaded: false
   },
   {
-    status: 901,        // 已完成
+    status: 3,        // 已发货
+    text: '已发货',
+    loadingType: 'more',
+    orderList: [],
+    loaded: false
+  },
+  {
+    status: 4,        // 已完成
     text: '已完成',
     loadingType: 'more',
     orderList: [],
@@ -190,21 +205,27 @@ const navList = ref([
   }
 ]);
 
-// 订单状态映射
+// 订单状态映射 - 使用后端的状态码
 const orderStatusMap = {
-  101: '待付款',
-  102: '用户取消',
-  103: '系统取消',
-  201: '已付款',
-  202: '申请退款',
-  203: '已退款',
-  301: '待发货',
-  401: '已发货',
-  501: '用户收货',
-  502: '系统收货',
-  901: '已完成'
+  0: '全部订单',
+  1: '待付款',
+  2: '待发货',
+  3: '已发货',
+  4: '已完成',
+  5: '已关闭',
+  6: '已取消'
 };
 
+// 状态颜色映射
+const statusColorMap = {
+  0: '#e6a23c',  // 待发货 - 橙色
+  1: '#fa436a',  // 待付款 - 红色，突出显示
+  2: '#e6a23c',  // 待发货 - 橙色
+  3: '#409eff',  // 已发货 - 蓝色
+  4: '#67c23a',  // 已完成 - 绿色
+  5: '#909399',  // 已关闭 - 灰色
+  6: '#909399'   // 已取消 - 灰色
+};
 // ==========================================
 // 生命周期钩子
 // ==========================================
@@ -214,12 +235,21 @@ onLoad((options) => {
   // 根据传入的状态参数设置当前标签
   if (options && options.status) {
     const statusValue = parseInt(options.status);
+    console.log('页面参数 status:', statusValue);
+
+    // 找到对应的标签索引
     const index = navList.value.findIndex(item => item.status === statusValue);
+    console.log('找到的索引:', index);
+
+
     if (index !== -1) {
       tabCurrentIndex.value = index;
+    }else if (statusValue === 0) {
+      // 0 表示全部
+      tabCurrentIndex.value = 0;
     }
   }
-
+  console.log('当前标签索引:', tabCurrentIndex.value);
   // 初始加载数据
   loadData();
 });
@@ -251,13 +281,18 @@ const loadData = async (source) => {
   console.log('加载订单数据, 来源:', source || '初始加载');
 
   const navItem = currentNavItem.value;
-  const statusValue = navItem.status === 0 ? null : navItem.status;
+  console.log('导航值是多少：', navItem);
+  console.log('当前加载状态:', navItem.loadingType);
+  console.log('当前页码:', pageNum.value);
 
-  // 防止重复加载
-  if (navItem.loadingType === 'loading') {
-    console.log('正在加载中，跳过');
+  // 防止重复加载 - 增强检查
+  if (navItem.loadingType === 'loading' || navItem.loadingType === 'noMore') {
+    console.log('正在加载中或已无更多数据，跳过');
     return;
   }
+
+  const statusValue = navItem.status === 0 ? navItem.status : navItem.status;
+  console.log('status是多少：', statusValue);
 
   try {
     // 设置加载状态
@@ -277,28 +312,38 @@ const loadData = async (source) => {
     console.log('订单列表响应:', response);
 
     // 处理返回数据
-    if (response && response.data && Array.isArray(response.data.list)) {
-      const orderList = response.data.list;
+    if (response && Array.isArray(response.list)) {
+      console.log('✅ 进入正确的处理分支');
+      const orderList = response.list;
+      const total = response.total || 0;  // 从 response 中获取 total
+
+      console.log('获取到订单数据:', orderList.length, '条，总共:', total, '条');
+
 
       // 更新订单列表
       if (pageNum.value === 1) {
         // 第一页，直接替换
         navItem.orderList = orderList;
+        console.log('第一页，替换订单列表，现在有', orderList.length, '条');
       } else {
         // 后续页面，追加数据
         navItem.orderList = [...navItem.orderList, ...orderList];
+        console.log('追加数据，现在总共:', navItem.orderList.length, '条');
       }
 
       // 更新加载状态
       if (orderList.length < pageSize.value) {
         // 数据不足一页，表示没有更多数据
         navItem.loadingType = 'noMore';
+        console.log('数据不足一页，标记为 noMore');
       } else {
         // 还有更多数据
         navItem.loadingType = 'more';
         pageNum.value += 1;
+        console.log('还有更多数据，页码增加到:', pageNum.value);
       }
     } else {
+      console.log('❌ 进入了错误分支');
       // 数据格式异常
       console.error('订单数据格式异常:', response);
       navItem.loadingType = 'more';
@@ -312,8 +357,9 @@ const loadData = async (source) => {
 
     // 显示错误提示
     uni.showToast({
-      title: '加载失败',
-      icon: 'none'
+      title: '加载失败'+ (error.message || '未知错误'),
+      icon: 'none',
+      duration: 3000
     });
 
     // 恢复加载状态
@@ -499,7 +545,14 @@ const formatMoney = (money) => {
  * @returns {string} 状态文本
  */
 const getOrderStatusText = (status) => {
-  return orderStatusMap[status] || '未知状态';
+  return orderStatusMap[status] || '全部订单';
+};
+
+/**
+ * 获取状态颜色
+ */
+const getStatusColor = (status) => {
+  return statusColorMap[status] || '#909399';  // 默认灰色
 };
 
 /**

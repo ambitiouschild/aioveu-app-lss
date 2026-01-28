@@ -23,7 +23,7 @@
             <!-- 商品图片区域 -->
             <view class="image-wrapper">
               <image
-                :src="item.imageUrl"
+                :src="item.picUrl"
                 class="loaded"
                 mode="aspectFill"
                 lazy-load
@@ -273,7 +273,7 @@ const onImageLoad = (key, index) => {
  */
 const onImageError = (key, index) => {
   // 设置错误图片
-  cartItemList.value[index].imageUrl = '/static/errorImage.jpg';
+  cartItemList.value[index].picUrl = '/static/errorImage.jpg';
 };
 
 /**

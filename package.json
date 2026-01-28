@@ -91,6 +91,7 @@
     "@dcloudio/uni-mp-xhs": "3.0.0-4020420240722002",
     "@dcloudio/uni-quickapp-webview": "3.0.0-4020420240722002",
     "@dcloudio/uni-ui": "^1.5.11",
+    "@element-plus/icons-vue": "^2.3.2",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
     "html5-qrcode": "^2.3.8",

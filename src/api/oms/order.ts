@@ -1,75 +1,75 @@
 import request from '@/utils/request'
 
 // 订单列表
-export function listOrdersWithPage(params) {
+export function listOrdersWithPage(params :any) {
 	return request({
 		url: '/aioveu-oms/app-api/v1/orders',
-		method: 'get',
-		params: params,
-		headers: {
+		method: "GET",
+		data: params,
+		header: {
 			'auth': true // 需要认证
 		}
 	})
 }
 
 // 订单确认
-export function confirm(skuId) {
+export function confirm( skuId :any) {
 	return request({
 		url: '/aioveu-oms/app-api/v1/orders/confirm',
-		method: 'post',
-		params: {
+		method: "POST",
+		data: {
 			skuId: skuId
 		},
-		headers: {
+		header: {
 			'auth': true // 需要认证
 		}
 	})
 }
 
 // 订单提交
-export function submit(data) {
+export function submit(data :any) {
 	return request({
 		url: '/aioveu-oms/app-api/v1/orders/submit',
-		method: 'post',
+		method: "POST",
 		data: data,
-		headers: {
+		header: {
 			'auth': true // 需要认证
 		}
 	})
 }
 
 // 订单支付
-export function pay(data) {
+export function pay(data :any) {
 	return request({
 		url: '/aioveu-oms/app-api/v1/orders/payment',
-		method: 'post',
+		method: "POST",
 		data:data,
-		headers: {
+		header: {
 			'auth': true // 需要认证
 		}
 	})
 }
 
 // 取消订单
-export function cancelOrder(orderId) {
+export function cancelOrder(orderId :any) {
 	return request({
 		url: '/aioveu-oms/app-api/v1/orders/cancel',
-		method: 'put',
-		params: {
+		method: "PUT",
+		data: {
 			id: orderId
 		},
-		headers: {
+		header: {
 			'auth': true // 需要认证
 		}
 	})
 }
 
 // 删除订单
-export function deleteOrder(orderId) {
+export function deleteOrder(orderId :any) {
 	return request({
 		url: '/aioveu-oms/app-api/v1/orders/' + orderId,
-		method: 'delete',
-		headers: {
+		method: "DELETE",
+		header: {
 			'auth': true // 需要认证
 		}
 	})

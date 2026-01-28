@@ -784,7 +784,7 @@ const doAddToCart = async () => {
   } catch (error) {
     console.error('添加购物车失败:', error);
     uni.showToast({
-      title: '添加购物车失败',
+      title: '添加购物车失败:'+ error.message,
       icon: 'none'
     });
   } finally {
