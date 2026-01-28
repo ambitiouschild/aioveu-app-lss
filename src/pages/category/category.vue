@@ -22,7 +22,7 @@
       :scroll-top="tabScrollTop"
     >
       <view
-        v-for="item in safeSlist"
+        v-for="item in currentSecondList"
         :key="item.id"
         class="s-list"
         :id="'main-' + item.id"
@@ -65,6 +65,14 @@ const defaultImageUrl = '/static/default-category.png'  // 默认图片
 // 计算属性：安全的二级分类列表  显示顺序依赖数据顺序  safeSlist直接使用 slist.value的顺序
 const safeSlist = computed(() => {
   return slist.value.filter(item => item && item.id && item.name)
+})
+
+// 只需要修改显示逻辑，不需要改排序逻辑
+const currentSecondList = computed(() => {
+  if (!currentId.value) return []
+  return slist.value
+    .filter(item => item.parentId === currentId.value)
+  // 你的排序逻辑仍然有效
 })
 
 // 计算属性：获取指定二级分类下的三级分类  getThirdCategories返回的也是 tlist.value的顺序  所以显示顺序完全由数据顺序决定
