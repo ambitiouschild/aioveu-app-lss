@@ -178,7 +178,7 @@ const loadData = async (force = false) => {
   if (!force) {
     const shouldRefresh = await checkShouldRefresh(timeSinceLastLoad)  // ✅ 这里需要 await
     if (!shouldRefresh) {
-      console.log(`⏰ 使用缓存，跳过刷新 (${Math.floor(timeSinceLastLoad/1000)}秒前)`)
+      console.log(`⏰ 使用缓存，跳过刷新,上次更新 (${Math.floor(timeSinceLastLoad/1000)}秒前)`)
       return
     }
   }
