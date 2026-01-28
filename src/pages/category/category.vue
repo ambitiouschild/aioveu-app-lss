@@ -268,6 +268,8 @@ const createHierarchySorter = ({
 
 /**
  * 创建增强版层级排序器（支持上级顺序）
+ * 设计可以轻松扩展：
+ * 支持多种排序规则
  */
 const createEnhancedHierarchySorter = (parentOrderMap, config = {}) => {
   const {
@@ -276,6 +278,7 @@ const createEnhancedHierarchySorter = (parentOrderMap, config = {}) => {
     parentKey = 'parentId',
     sortOrder = 'asc',
     idOrder = 'asc'
+    // 可以添加：按商品数量、按点击率等
   } = config
 
   const sortMultiplier = sortOrder === 'desc' ? -1 : 1
@@ -289,6 +292,10 @@ const createEnhancedHierarchySorter = (parentOrderMap, config = {}) => {
     if (aParentOrder !== bParentOrder) {
       return aParentOrder - bParentOrder   // ✅ 这就是关键！
     }
+
+    // 先按上级顺序
+    // 然后可以按：b.productCount - a.productCount
+    // 或：b.clickRate - a.clickRate
 
     // 2. 同一上级下，按sort字段排序
     const sortCompare = sortMultiplier * ((a[sortKey] || 0) - (b[sortKey] || 0))
