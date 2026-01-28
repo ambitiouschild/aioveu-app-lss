@@ -208,7 +208,7 @@ export default function request<T>(options: UniApp.RequestOptions): Promise<T> {
       data: processedConfig.data,
       header: requestHeaders,
       success: (response) => {
-        console.log("✅ 请求成功回调");
+        // console.log("✅ 请求成功回调");
         // console.log("响应状态码:", response.statusCode);
         // console.log("响应数据:", response.data);
         // console.log("响应头:", response.header);

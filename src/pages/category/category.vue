@@ -73,16 +73,14 @@ const defaultImageUrl = '/static/default-category.png'  // 默认图片
 const lastLoadTime = ref(0)
 // 添加一个数据版本标记
 const dataVersion = ref(0)
+const networkType = ref('unknown') // 网络类型
+
 
 // 计算属性：安全的二级分类列表  显示顺序依赖数据顺序  safeSlist直接使用 slist.value的顺序
 const safeSlist = computed(() => {
 
   // 添加 dataVersion 作为依赖，确保数据更新时重新计算
   dataVersion.value
-
-  console.log('safeSlist 重新计算，数据版本:', dataVersion.value)
-
-  console.log(`获取分类 ${currentId.value} 的二级列表`)
 
   return slist.value.filter(item => item && item.id && item.name)
 })
@@ -94,8 +92,6 @@ const currentSecondList = computed(() => {
   dataVersion.value
 
   if (!currentId.value) return []
-
-  console.log(`获取分类 ${currentId.value} 的二级列表`)
 
   return slist.value
     .filter(item => item.parentId === currentId.value)
@@ -136,7 +132,7 @@ const realEcommerceSort = {
 }
 完全符合你的需求：
 
-✅ 一级分类在前 → 对应的子分类在二级里也在前​
+✅ 一级分类在前 → 对应的子分类在二级里也在前
 
 ✅ 二级分类在前 → 对应的子分类在三级里也在前
 这样就能确保一级分类靠前的，其子分类在二三级中也靠前，用户体验会很好。
@@ -171,12 +167,32 @@ const realEcommerceSort = {
  */
 const loadData = async (force = false) => {
 
-  // 如果已经在加载中，避免重复加载
-  if (loading.value && !force) return
+  //把检查缓存放在下载数据里，而不是点击分类里
+  ///问题：每次点击都要检查，逻辑复杂，容易出错
+  //策略B：检查放在加载数据里（推荐方案）
+
+  const now = Date.now()
+  const timeSinceLastLoad = now - lastLoadTime.value
+
+  // 如果不是强制刷新，检查是否需要刷新
+  if (!force) {
+    const shouldRefresh = await checkShouldRefresh(timeSinceLastLoad)  // ✅ 这里需要 await
+    if (!shouldRefresh) {
+      console.log(`⏰ 使用缓存，跳过刷新 (${Math.floor(timeSinceLastLoad/1000)}秒前)`)
+      return
+    }
+  }
+
+  // 2. 防止重复加载
+  if (loading.value) {
+    console.log('已经在加载中，跳过')
+    return
+  }
 
   loading.value = true
+
   try {
-    console.log("调用API获取分类数据:")
+    // console.log("调用API获取分类数据:")
     const response = await getCategoryList()
 
     if (!response) {
@@ -185,7 +201,7 @@ const loadData = async (force = false) => {
     }
 
     const categoryList = response  // ✅ 修复：应该是 response
-    console.log("分类数据:", categoryList)
+    // console.log("分类数据:", categoryList)
 
     // 重置数据
     flist.value = []
@@ -239,21 +255,24 @@ const loadData = async (force = false) => {
     sortCategories()
 
 
+    // 更新时间戳
+    lastLoadTime.value = now  // ✅ 这里要更新
+
     // 更新数据版本
     dataVersion.value++
-    localStorage.setItem(CACHE_CONFIG.VERSION_KEY, dataVersion.value)
-    localStorage.setItem(CACHE_CONFIG.TIMESTAMP_KEY, Date.now())
+    setStorage(CACHE_CONFIG.VERSION_KEY, dataVersion.value)
+    setStorage(CACHE_CONFIG.TIMESTAMP_KEY, Date.now())
 
     // 默认选中第一个
     if (flist.value.length > 0) {
       currentId.value = flist.value[0].id
     }
 
-    console.log("数据加载完成:", {
-      一级分类: flist.value.length,
-      二级分类: slist.value.length,
-      三级分类: tlist.value.length
-    })
+    // console.log("数据加载完成:", {
+    //   一级分类: flist.value.length,
+    //   二级分类: slist.value.length,
+    //   三级分类: tlist.value.length
+    // })
 
     console.log("数据加载完成，版本:", dataVersion.value)
 
@@ -262,6 +281,70 @@ const loadData = async (force = false) => {
   }
 }
 
+/**
+ * 获取网络类型（小程序兼容）
+ */
+const getNetworkType = () => {
+  return new Promise((resolve) => {
+    // 小程序获取网络类型
+    if (uni.getNetworkType) {
+      uni.getNetworkType({
+        success: (res) => {
+          networkType.value = res.networkType
+          resolve(res.networkType)
+        },
+        fail: () => {
+          networkType.value = 'unknown'
+          resolve('unknown')
+        }
+      })
+    } else {
+      // H5 环境
+      if (navigator.connection) {
+        networkType.value = navigator.connection.effectiveType
+        resolve(navigator.connection.effectiveType)
+      } else {
+        networkType.value = 'unknown'
+        resolve('unknown')
+      }
+    }
+  })
+}
+
+/**
+ * 存储数据（小程序兼容）
+ */
+const setStorage = (key, value) => {
+  try {
+    if (uni.setStorageSync) {
+      // 小程序
+      uni.setStorageSync(key, value)
+    } else {
+      // H5
+      localStorage.setItem(key, value)
+    }
+  } catch (error) {
+    console.error('存储失败:', error)
+  }
+}
+
+/**
+ * 读取数据（小程序兼容）
+ */
+const getStorage = (key, defaultValue = null) => {
+  try {
+    if (uni.getStorageSync) {
+      // 小程序
+      return uni.getStorageSync(key) || defaultValue
+    } else {
+      // H5
+      return localStorage.getItem(key) || defaultValue
+    }
+  } catch (error) {
+    console.error('读取失败:', error)
+    return defaultValue
+  }
+}
 
 /**
  * 添加其他刷新触发
@@ -270,6 +353,17 @@ const loadData = async (force = false) => {
 const enablePullToRefresh = () => {
   // 小程序或H5的下拉刷新
 }
+
+/**
+ * 检查缓存是否过期
+ */
+const checkCacheExpired = () => {
+  const lastTime = getStorage(CACHE_CONFIG.TIMESTAMP_KEY, 0)
+  console.log(   "上次下载时间 ",lastTime)
+  const now = Date.now()
+  return (now - lastTime) > CACHE_CONFIG.DURATION
+}
+
 
 // 2. 定时刷新
 let refreshTimer
@@ -280,30 +374,6 @@ const startAutoRefresh = () => {
     loadData()
   }, 5 * 60 * 1000)
 }
-
-// 3. 页面可见性变化
-const handleVisibilityChange = () => {
-  if (!document.hidden) {
-    // 页面重新可见，检查是否需要刷新
-    const lastTime = localStorage.getItem(CACHE_CONFIG.TIMESTAMP_KEY) || 0
-    if (Date.now() - lastTime > CACHE_CONFIG.DURATION) {
-      console.log('页面重新显示，刷新数据')
-      loadData()
-    }
-  }
-}
-
-// 4. 网络状态变化
-const handleOnlineStatus = () => {
-  if (navigator.onLine) {
-    console.log('网络恢复，刷新数据')
-    loadData()
-  }
-}
-
-
-
-
 
 //----------------------------------------------------------------------------------------------------
 /**
@@ -542,24 +612,24 @@ const categorySorter = createCategorySorter(sorterConfig)
  */
 const sortCategories = () => {
 
-  console.log("排序前数据:", {
-    flist: flist.value,
-    slist: slist.value,
-    tlist: tlist.value
-  })
+  // console.log("排序前数据:", {
+  //   flist: flist.value,
+  //   slist: slist.value,
+  //   tlist: tlist.value
+  // })
 
   //调用时传入当前值（推荐）  直接调用时传入当前值是最简单实用的方案。过度设计只会增加复杂度。
   // 一级分类排序
   flist.value = categorySorter.sortFirstLevel(flist.value)
-  console.log("一级分类排序", flist.value, flist.value.length, "条")
+  // console.log("一级分类排序", flist.value, flist.value.length, "条")
 
   // 二级分类排序
   slist.value = categorySorter.sortSecondLevel(flist.value, slist.value)
-  console.log("二级分类排序", slist.value, slist.value.length, "条")
+  // console.log("二级分类排序", slist.value, slist.value.length, "条")
 
   // 三级分类排序
   tlist.value = categorySorter.sortThirdLevel(flist.value, slist.value,tlist.value)
-  console.log("三级分类排序", tlist.value, tlist.value.length, "条")
+  // console.log("三级分类排序", tlist.value, tlist.value.length, "条")
 }
 //-------------------------------------------------------------------------------------------------------
 /**
@@ -571,21 +641,9 @@ const tabtap = async (item) => {
   // 更新当前选中的分类ID
   currentId.value = item.id
 
-  const now = Date.now()
-  const timeSinceLastLoad = now - lastLoadTime.value
 
-  // 判断是否需要刷新
-  const shouldRefresh = checkShouldRefresh(item.id, timeSinceLastLoad)
-
-
-  if (shouldRefresh) {
-    console.log('执行刷新，上次刷新:', Math.floor(timeSinceLastLoad/1000), '秒前')
-    await loadData()
-    lastLoadTime.value = now
-  } else {
-    console.log('使用缓存，跳过网络请求')
-  }
-
+  // ✅ 调用 loadData
+  await loadData()
 
 //是的，如果是点击展开的方案，需要重新加载数据，因为是在前端做缓存而不是实时更新。但更好的方案是使用响应式自动更新
   //方案1：实时刷新（推荐）
@@ -608,7 +666,7 @@ const tabtap = async (item) => {
 
   try {
 
-    // 如果还没计算过尺寸，先计算  // 滚动到对应位置
+    // 如果还没计算过尺寸，先计算  // 滚动到对应位置  // 滚动逻辑
         if (!sizeCalcState.value) {
           await calculateSizes()
         }
@@ -628,20 +686,18 @@ const tabtap = async (item) => {
 /**
  * 检查是否需要刷新
  */
-const checkShouldRefresh = (categoryId, timeSinceLastLoad) => {
+const checkShouldRefresh = async (timeSinceLastLoad) => {
   // 条件1：首次加载
   if (lastLoadTime.value === 0) return true
 
   // 条件2：超过缓存时间（3分钟）
   if (timeSinceLastLoad > CACHE_CONFIG.DURATION) return true
 
-  // 条件3：这个分类的数据可能不完整
-  const hasCategoryData = slist.value.some(item => item.parentId === categoryId)
-  if (!hasCategoryData) return true
 
-  // 条件4：网络很好，可以刷新
-  if (navigator.connection?.effectiveType === '4g') {
-    // 4G网络下，1分钟以上就刷新
+  // 条件4：检查网络类型
+  const network = await getNetworkType()
+  if (network === 'wifi' || network === '4g') {
+    // 好网络下，1分钟以上就刷新
     if (timeSinceLastLoad > 60 * 1000) return true
   }
 
@@ -727,27 +783,43 @@ const goToList = (secondId, thirdId) => {
   })
 }
 
+// 页面显示时
+onShow(() => {
+  console.log('页面显示')
+
+  // 获取当前网络类型
+  getNetworkType()
+
+  // 检查缓存是否过期
+  if (checkCacheExpired()) {
+    console.log('缓存已过期，刷新数据')
+    loadData()
+  }
+})
+
+
 // 页面加载
 onMounted(() => {
+
+  console.log('页面加载，初始获取数据')
+
+  // 读取缓存版本
+  const savedVersion = getStorage(CACHE_CONFIG.VERSION_KEY, 0)
+  dataVersion.value = parseInt(savedVersion) || 0
+
+  // 初始加载
   loadData()
 
   // 启动定时刷新
   startAutoRefresh()
 
-  // 监听页面可见性
-  document.addEventListener('visibilitychange', handleVisibilityChange)
-
-  // 监听网络状态
-  window.addEventListener('online', handleOnlineStatus)
-
+// 小程序环境不支持 document.addEventListener 移除所有 document 和 window 事件监听
 
 })
 
 onUnmounted(() => {
   // 清理
   clearInterval(refreshTimer)
-  document.removeEventListener('visibilitychange', handleVisibilityChange)
-  window.removeEventListener('online', handleOnlineStatus)
 })
 
 
