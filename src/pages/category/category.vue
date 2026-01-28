@@ -354,17 +354,6 @@ const enablePullToRefresh = () => {
   // 小程序或H5的下拉刷新
 }
 
-/**
- * 检查缓存是否过期
- */
-const checkCacheExpired = () => {
-  const lastTime = getStorage(CACHE_CONFIG.TIMESTAMP_KEY, 0)
-  console.log(   "上次下载时间 ",lastTime)
-  const now = Date.now()
-  return (now - lastTime) > CACHE_CONFIG.DURATION
-}
-
-
 // 2. 定时刷新
 let refreshTimer
 const startAutoRefresh = () => {
@@ -790,11 +779,8 @@ onShow(() => {
   // 获取当前网络类型
   getNetworkType()
 
-  // 检查缓存是否过期
-  if (checkCacheExpired()) {
-    console.log('缓存已过期，刷新数据')
-    loadData()
-  }
+  // 检查缓存是否过期  这样用户每次回到页面都会检查更新，体验更好，也不会过度刷新。
+  loadData()  // loadData内部会检查3分钟缓存
 })
 
 
