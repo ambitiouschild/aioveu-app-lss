@@ -6,7 +6,7 @@
         v-for="item in flist"
         :key="item.id"
         class="f-item b-b"
-        :class="{ active: item.id == currentId }"
+        :class="{ active: currentId == item.id }"
         @click="tabtap(item)"
       >
         {{ item.name }}
@@ -87,9 +87,6 @@ const safeSlist = computed(() => {
 
 // 只需要修改显示逻辑，不需要改排序逻辑
 const currentSecondList = computed(() => {
-
-  // 添加 dataVersion 作为依赖，确保数据更新时重新计算
-  dataVersion.value
 
   if (!currentId.value) return []
 
@@ -263,10 +260,20 @@ const loadData = async (force = false) => {
     setStorage(CACHE_CONFIG.VERSION_KEY, dataVersion.value)
     setStorage(CACHE_CONFIG.TIMESTAMP_KEY, Date.now())
 
-    // 默认选中第一个
-    if (flist.value.length > 0) {
-      currentId.value = flist.value[0].id
-    }
+    // ❌ 注释掉这行，不要重置选中状态
+    // // 默认选中第一个
+    // if (flist.value.length > 0) {
+    //   currentId.value = flist.value[0].id
+    // }
+
+    // ✅ 关键：重置尺寸计算状态  只有真正更新数据时才设为 false
+/*    你的思路完全正确：
+    不需要每次点击都设置 false
+    只需要在数据真正更新时设置 false
+    这样点击时如果有新数据，就会重新计算
+    如果没有新数据（使用缓存），就使用已有的计算*/
+
+    sizeCalcState.value = false
 
     // console.log("数据加载完成:", {
     //   一级分类: flist.value.length,
@@ -275,6 +282,10 @@ const loadData = async (force = false) => {
     // })
 
     console.log("数据加载完成，版本:", dataVersion.value)
+    await nextTick()
+
+    // ✅ 可选：立即计算尺寸
+    // await calculateSizes()
 
   } catch (error) {
     console.error("加载失败:", error)
@@ -361,6 +372,7 @@ const startAutoRefresh = () => {
   refreshTimer = setInterval(() => {
     console.log('定时刷新分类数据')
     loadData()
+    nextTick()
   }, 5 * 60 * 1000)
 }
 
@@ -626,9 +638,17 @@ const sortCategories = () => {
  */
 const tabtap = async (item) => {
 
-  console.log('点击分类:', item.name)
-  // 更新当前选中的分类ID
-  currentId.value = item.id
+  // console.log('=== 开始处理点击 ===')
+  // console.log('点击的分类:', item.name, 'ID:', item.id)
+
+  // 立即更新，避免异步干扰
+  const targetId = item.id
+  currentId.value = targetId
+  // console.log('立即设置 currentId 为:', targetId)
+  // 等待Vue更新
+  await nextTick()  // 添加这行！
+
+
 
 
 
@@ -653,20 +673,58 @@ const tabtap = async (item) => {
 
   try {
 
+    // ✅ 调用 loadData // 1. 先刷新数据  确保每个异步操作完成后，再执行下一个操作。async/await是解决这个问题的正确工具
+    // await loadData()
+    // console.log('loadData 完成，耗时:', Date.now() - startTime, 'ms')
+
+    // 再次确认选中状态
+    if (currentId.value !== targetId) {
+      console.warn('⚠️ loadData 后 currentId 被改变!', {
+        期望: targetId,
+        实际: currentId.value
+      })
+      // 纠正回来
+      currentId.value = targetId
+    }
+
+
+    // 3. ✅ 关键：等待Vue的DOM更新  在 tabtap 函数中，在 loadData() 后立即添加：
+    await nextTick()  // 添加这行！
+
+    //从日志看，最可能的原因是数据异步更新导致的状态不一致。第二次点击时，缓存可能正在更新或数据处于中间状态。建议先添加详细日志定位问题所在。
+    //刷新过后，点击就失效了"可以确定问题所在了。这是典型的数据与DOM不同步问题。
+
     // 如果还没计算过尺寸，先计算  // 滚动到对应位置  // 滚动逻辑
+
+/*    场景1：数据不变，DOM不变（设计假设）
+    计算一次尺寸就够了
+    sizeCalcState保持 true
+    不需要重新计算 ✅
+    场景2：数据变了，DOM变了（实际发生）
+    分类数据刷新了
+    新的分类可能有不同高度
+    但 sizeCalcState还是 true
+    不会重新计算 ❌
+
+    */
         if (!sizeCalcState.value) {
           await calculateSizes()
         }
 
         // 找到对应的二级分类，滚动到该位置
         const index = slist.value.findIndex(sitem => sitem.parentId == item.id)
+        console.log('找到对应的二级分类:',index);
+
         if (index !== -1 && slist.value[index].top !== undefined) {
+          // 5. ✅ 再次等待DOM更新（确保尺寸计算后DOM已更新）
+          await nextTick()
+
           tabScrollTop.value = slist.value[index].top
+          console.log('找到对应的二级分类，滚动到该位置:', tabScrollTop.value)
+        }else{
+          console.log('未找到对应的二级分类')
+          return; // 这里可能没有处理 -1 的情况
         }
-
-    // ✅ 调用 loadData
-    await loadData()
-
 
   } catch (error) {
     console.error('加载分类数据失败:', error)
@@ -705,9 +763,12 @@ const refreshCategories = async () => {
 }
 
 /**
- * 滚动事件处理
+ * 滚动事件处理   是滚动触发了 handleScroll，然后 handleScroll又更新了 currentId，导致选中状态跳回。
+ * （滚动锁定）
  */
+
 const handleScroll = (e) => {
+
   // 如果还没计算过尺寸，先计算
   if (!sizeCalcState.value) {
     calculateSizes()
@@ -728,6 +789,8 @@ const handleScroll = (e) => {
 
 /**
  * 计算右侧每个分类块的位置和高度
+ *       //#main-${item.id}这个元素在数据刷新后可能不存在或者还没有被渲染到DOM中。
+ *       //你的DOM元素（#main-${item.id}）在数据更新后还没有被渲染出来，uni.createSelectorQuery()查询不到元素，所以无法计算 top值，导致滚动失效。
  */
 const calculateSizes = () => {
   return new Promise((resolve) => {
@@ -742,9 +805,30 @@ const calculateSizes = () => {
     }
 
     slist.value.forEach(item => {
+
+/*      3. 你的分类数据是静态的
+      可能你的分类数据很少变化：
+      分类数量固定
+      每个分类的内容固定
+      DOM高度基本不变
+      所以旧的top值依然有效
+      所以数据未更新，计算一次就行
+
+      你的 calculateSizes在第一次点击时就计算了所有分类的位置，包括：
+      "手机配件"下的所有二级分类
+      "美妆个护"下的所有二级分类
+      其他所有分类
+      所以即使第二次点击时没有重新计算，"美妆个护"的top值在第一次计算时就已经得到了
+      */
+
       uni.createSelectorQuery()
         .select('#main-' + item.id)
         .fields({ size: true }, (data) => {
+
+          // 这里是异步回调
+          // 多个查询并行执行
+          //两个并行的 calculateSizes会同时修改 slist
+
           if (data) {
             // 记录该分类块的顶部位置
             item.top = totalHeight
