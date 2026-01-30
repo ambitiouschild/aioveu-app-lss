@@ -44,13 +44,30 @@
           >
             <!-- 订单顶部信息：时间、状态、操作按钮 -->
             <view class="i-top b-b">
+
               <text class="time">{{ formatTime(order.createTime) }}</text>
+
+
+              <!-- 如果有退款状态，优先显示退款状态 -->
+              <text
+                v-if="order.refundStatus && order.refundStatus !== 0"
+                class="status"
+                :style="{color: getAfterSaleStatusColor(order.refundStatus)}"
+              >
+                {{ getAfterSaleStatusText(order.refundStatus) }}
+              </text>
+
 <!--              给不同订单状态设置不同的颜色-->
-              <text class="status"
-                    :style="{color: getStatusColor(order.status)}"
+              <!-- 否则显示订单状态 -->
+              <text
+                v-else
+                class="status"
+                :style="{color: getStatusColor(order.status)}"
               >
                 {{ getOrderStatusText(order.status) }}
               </text>
+
+
               <!-- 已关闭订单显示删除按钮 -->
               <text
                 v-if="order.status === 5 || order.status === 6"
@@ -110,7 +127,7 @@
             <!-- 订单操作按钮区域 -->
             <view
               class="action-box b-t"
-              v-if="order.status === 101"
+              v-if="order.status === 1"
             >
               <button
                 class="action-btn"
@@ -121,7 +138,48 @@
                 @click="doPay(order)"
               >立即支付</button>
             </view>
+
+            <!-- ✅ 新增：待发货状态显示申请退款按钮 -->
+            <view
+              class="action-box b-t"
+              v-else-if="order.status === 2"
+            >
+              <button
+                class="action-btn"
+                @click="applyRefund(order)"
+              >申请退款</button>
+            </view>
+
+            <!-- ✅ 新增：已发货状态显示申请退款/退货按钮 -->
+            <view
+              class="action-box b-t"
+              v-else-if="order.status === 3"
+            >
+              <button
+                class="action-btn"
+                @click="applyRefund(order, 'refund')"
+              >申请退款</button>
+              <button
+                class="action-btn recom"
+                @click="applyRefund(order, 'return')"
+              >申请退货</button>
+            </view>
+
+            <!-- ✅ 新增：已完成状态显示申请售后按钮 -->
+            <view
+              class="action-box b-t"
+              v-else-if="order.status === 4 && canApplyAfterSale(order)"
+            >
+              <button
+                class="action-btn"
+                @click="applyAfterSale(order)"
+              >申请售后</button>
+            </view>
+
+
           </view>
+
+
 
           <!-- 加载更多组件 -->
           <uni-load-more
@@ -145,8 +203,14 @@ import empty from '@/components/empty';
 import {
   cancelOrder as cancelOrderApi,
   deleteOrder as deleteOrderApi,
-  listOrdersWithPage
+  listOrdersWithPage,
+// 导入退款相关的API
+  applyRefund as applyRefundApi,
+  getRefundDetail,
+  getAfterSalesList
+
 } from '@/api/oms/order';
+
 
 // ==========================================
 // 响应式数据定义
@@ -215,6 +279,26 @@ const orderStatusMap = {
   5: '已关闭',
   6: '已取消'
 };
+
+// 新增：退款类型常量
+const REFUND_TYPE = {
+  REFUND_ONLY: 1,      // 仅退款
+  REFUND_RETURN: 2,    // 退货退款
+  EXCHANGE: 3          // 换货
+};
+
+// 退款原因选项
+const refundReasons = ref([
+  { value: 1, label: '不想要了' },
+  { value: 2, label: '拍错了/重复下单' },
+  { value: 3, label: '商品信息描述不符' },
+  { value: 4, label: '质量问题' },
+  { value: 5, label: '快递/物流问题' },
+  { value: 6, label: '未按时发货' },
+  { value: 7, label: '其他原因' }
+]);
+
+
 
 // 状态颜色映射
 const statusColorMap = {
@@ -518,6 +602,332 @@ const doPay = (order) => {
   });
 };
 
+// ==========================================
+// 业务方法 - 新增退款相关方法
+// ==========================================
+
+/**
+ * 申请退款
+ * @param {Object} order - 订单对象
+ * @param {string} type - 退款类型: 'refund' | 'return'
+ */
+const applyRefund = async (order, type = 'refund') => {
+  console.log('申请退款/退货:', { order, type });
+
+  // 确认对话框
+  uni.showModal({
+    title: '提示',
+    content: type === 'refund' ? '确定要申请退款吗？' : '确定要申请退货吗？',
+    success: async (res) => {
+      if (res.confirm) {
+        try {
+          uni.showLoading({ title: '处理中...' });
+
+          // 获取用户输入的退款原因和金额
+          const refundInfo = await showRefundInput(order, type);
+
+          if (!refundInfo) {
+            uni.hideLoading();
+            return; // 用户取消输入
+          }
+
+          // 构建退款申请参数
+          const params = {
+            orderId: order.id,
+            orderSn: order.orderSn,
+            refundType: type === 'refund' ? REFUND_TYPE.REFUND_ONLY : REFUND_TYPE.REFUND_RETURN,
+            refundAmount: refundInfo.amount, // 单位：分
+            refundReason: refundInfo.reason,
+            description: refundInfo.description || '',
+            proofImages: refundInfo.proofImages || []
+          };
+
+          console.log('提交退款申请参数:', params);
+
+          // 调用API申请退款
+          const response = await applyRefundApi(params);
+          console.log('退款申请响应:', response);
+
+          // 刷新订单数据
+          await loadData('refund');
+
+          uni.showToast({
+            title: '申请提交成功',
+            icon: 'success',
+            duration: 2000
+          });
+
+          // 跳转到退款详情页面
+          setTimeout(() => {
+            uni.navigateTo({
+              url: `/pages/order/refund-detail?id=${response.id}`,
+              fail: (err) => {
+                console.log('跳转失败:', err);
+                uni.showToast({
+                  title: '跳转失败',
+                  icon: 'none'
+                });
+              }
+            });
+          }, 1500);
+
+        } catch (error) {
+          console.error('申请退款失败:', error);
+          uni.showToast({
+            title: error.message || '申请失败',
+            icon: 'none',
+            duration: 3000
+          });
+        } finally {
+          uni.hideLoading();
+        }
+      }
+    }
+  });
+};
+
+/**
+ * 显示退款输入对话框
+ * @param {Object} order - 订单对象
+ * @param {string} type - 退款类型
+ * @returns {Promise<Object|null>} 退款信息或null
+ */
+const showRefundInput = (order, type) => {
+  return new Promise((resolve) => {
+    // 计算最大可退款金额
+    const maxRefundAmount = order.paymentAmount; // 单位：分
+    const maxRefundYuan = (maxRefundAmount / 100).toFixed(2);
+
+    uni.showModal({
+      title: type === 'refund' ? '申请退款' : '申请退货退款',
+      content: `最大可${type === 'refund' ? '退款' : '退货退款'}金额：¥${maxRefundYuan}`,
+      editable: true,
+      placeholderText: '请输入退款原因',
+      confirmText: '下一步',
+      cancelText: '取消',
+      success: (res1) => {
+        if (res1.confirm && res1.content) {
+          // 第一步：输入退款原因
+          const reason = res1.content.trim();
+
+          // 第二步：输入退款金额
+          uni.showModal({
+            title: '退款金额',
+            content: '请输入退款金额（元）',
+            editable: true,
+            placeholderText: `0.00 - ${maxRefundYuan}`,
+            confirmText: '提交',
+            cancelText: '上一步',
+            success: (res2) => {
+              if (res2.confirm && res2.content) {
+                const amountYuan = parseFloat(res2.content);
+
+                // 验证金额
+                if (isNaN(amountYuan) || amountYuan <= 0) {
+                  uni.showToast({
+                    title: '请输入有效的金额',
+                    icon: 'none'
+                  });
+                  resolve(null);
+                  return;
+                }
+
+                if (amountYuan > parseFloat(maxRefundYuan)) {
+                  uni.showToast({
+                    title: '金额不能超过最大可退金额',
+                    icon: 'none'
+                  });
+                  resolve(null);
+                  return;
+                }
+
+                // 转换金额为分
+                const amount = Math.round(amountYuan * 100);
+
+                // 第三步：可选输入详细描述
+                uni.showModal({
+                  title: '补充说明',
+                  content: '请补充说明退款情况（可选）',
+                  editable: true,
+                  placeholderText: '请详细描述退款原因...',
+                  confirmText: '提交申请',
+                  cancelText: '跳过',
+                  success: (res3) => {
+                    resolve({
+                      reason,
+                      amount,
+                      description: res3.confirm ? res3.content.trim() : '',
+                      proofImages: [] // 可以后续添加图片上传功能
+                    });
+                  }
+                });
+              } else if (res2.cancel) {
+                // 返回上一步
+                showRefundInput(order, type).then(resolve);
+              } else {
+                resolve(null);
+              }
+            }
+          });
+        } else {
+          resolve(null);
+        }
+      }
+    });
+  });
+};
+
+/**
+ * 申请售后（已完成订单）
+ * @param {Object} order - 订单对象
+ */
+const applyAfterSale = (order) => {
+  console.log('申请售后:', order);
+
+  uni.showActionSheet({
+    itemList: ['仅退款', '退货退款', '换货'],
+    success: (res) => {
+      const typeIndex = res.tapIndex;
+      let type = '';
+
+      switch (typeIndex) {
+        case 0:
+          type = 'refund';
+          break;
+        case 1:
+          type = 'return';
+          break;
+        case 2:
+          type = 'exchange';
+          break;
+        default:
+          return;
+      }
+
+      applyRefund(order, type);
+    },
+    fail: (err) => {
+      console.log('选择失败:', err);
+    }
+  });
+};
+
+
+/**
+ * 检查订单是否可以申请售后
+ * @param {Object} order - 订单对象
+ * @returns {boolean} 是否可以申请售后
+ */
+const canApplyAfterSale = (order) => {
+  if (!order || order.status !== 4) return false;
+
+  // 检查订单完成时间是否在售后期限内（比如7天内）
+  if (order.completeTime) {
+    const completeTime = new Date(order.completeTime).getTime();
+    const now = Date.now();
+    const sevenDays = 7 * 24 * 60 * 60 * 1000; // 7天的毫秒数
+
+    // 如果超过7天，不能申请售后
+    if (now - completeTime > sevenDays) {
+      return false;
+    }
+  }
+
+  // 检查是否已经申请过售后
+  // 这里可以调用API检查该订单是否有未完成的售后申请
+  // 暂时返回true
+  return true;
+};
+
+/**
+ * 查看退款进度
+ * @param {string|number} orderId - 订单ID
+ */
+const viewRefundProgress = async (orderId) => {
+  try {
+    uni.showLoading({ title: '加载中...' });
+
+    // 调用API获取退款详情
+    const refundDetail = await getRefundDetail(orderId);
+
+    uni.hideLoading();
+
+    // 跳转到退款详情页面
+    uni.navigateTo({
+      url: `/pages/order/refund-detail?id=${refundDetail.id}`,
+      fail: (err) => {
+        console.error('跳转失败:', err);
+        uni.showToast({
+          title: '跳转失败',
+          icon: 'none'
+        });
+      }
+    });
+
+  } catch (error) {
+    console.error('获取退款详情失败:', error);
+    uni.hideLoading();
+    uni.showToast({
+      title: error.message || '加载失败',
+      icon: 'none'
+    });
+  }
+};
+
+// ==========================================
+// 工具方法 - 新增退款相关工具方法
+// ==========================================
+
+/**
+ * 格式化售后状态
+ * @param {number} status - 售后状态码
+ * @returns {string} 状态文本
+ */
+const getAfterSaleStatusText = (status) => {
+  const statusMap = {
+    0: '待处理',
+    1: '审核中',
+    2: '审核通过',
+    3: '审核拒绝',
+    4: '退款中',
+    5: '退款成功',
+    6: '退款失败',
+    7: '买家发货',
+    8: '卖家收货',
+    9: '换货发货',
+    10: '换货完成',
+    11: '已取消',
+    12: '已关闭'
+  };
+  return statusMap[status] || '未知状态';
+};
+
+/**
+ * 获取售后状态颜色
+ * @param {number} status - 售后状态码
+ * @returns {string} 颜色值
+ */
+const getAfterSaleStatusColor = (status) => {
+  const colorMap = {
+    0: '#e6a23c',  // 待处理 - 橙色
+    1: '#409eff',  // 审核中 - 蓝色
+    2: '#67c23a',  // 审核通过 - 绿色
+    3: '#f56c6c',  // 审核拒绝 - 红色
+    4: '#409eff',  // 退款中 - 蓝色
+    5: '#67c23a',  // 退款成功 - 绿色
+    6: '#f56c6c',  // 退款失败 - 红色
+    7: '#409eff',  // 买家发货 - 蓝色
+    8: '#67c23a',  // 卖家收货 - 绿色
+    9: '#409eff',  // 换货发货 - 蓝色
+    10: '#67c23a', // 换货完成 - 绿色
+    11: '#909399', // 已取消 - 灰色
+    12: '#909399'  // 已关闭 - 灰色
+  };
+  return colorMap[status] || '#909399';
+};
+
+
+
 /**
  * 点击加载更多
  */
@@ -818,11 +1228,11 @@ page,
           color: $font-color-dark;
           font-weight: 500;
 
-          &:before {
-            content: '¥';
-            font-size: $font-sm;
-            margin-right: 2upx;
-          }
+          //&:before {
+          //  content: '¥';
+          //  font-size: $font-sm;
+          //  margin-right: 2upx;
+          //}
         }
       }
     }
@@ -849,12 +1259,12 @@ page,
       font-weight: 600;
       margin-left: 8upx;
 
-      &:before {
-        content: '¥';
-        font-size: $font-sm;
-        font-weight: normal;
-        margin-right: 2upx;
-      }
+      //&:before {
+      //  content: '¥';
+      //  font-size: $font-sm;
+      //  font-weight: normal;
+      //  margin-right: 2upx;
+      //}
     }
   }
 
@@ -902,6 +1312,29 @@ page,
         pointer-events: none;
       }
     }
+
+    /* 退款相关按钮样式 */
+    .action-btn.refund {
+      border-color: #e6a23c;
+      color: #e6a23c;
+    }
+
+    .action-btn.refund:active {
+      background: rgba(230, 162, 60, 0.1);
+    }
+
+    /* 售后按钮样式 */
+    .action-btn.after-sale {
+      border-color: #409eff;
+      color: #409eff;
+    }
+
+    .action-btn.after-sale:active {
+      background: rgba(64, 158, 255, 0.1);
+    }
+
+
+
   }
 }
 

@@ -74,3 +74,37 @@ export function deleteOrder(orderId :any) {
 		}
 	})
 }
+
+// 申请退款
+export function applyRefund (data :any) {
+  return request({
+    url: '/aioveu-oms/app-api/v1/orders/apply-refund',
+    method: "POST",
+    data,
+    header: {
+      'auth': true // 需要认证
+    }
+  })
+}
+
+// 获取退款详情
+export function getRefundDetail (orderId :any) {
+  return request({
+    url: `/aioveu-oms/app-api/v1/orders/refund-detail/${orderId}`,
+    method: "GET",
+    header: {
+      'auth': true // 需要认证
+    }
+  })
+}
+
+// 取消退款
+export function cancelRefund (refundId :any) {
+  return request({
+    url: `/aioveu-oms/app-api/v1/orders/cancel-refund/${refundId}`,
+    method: "POST",
+    header: {
+      'auth': true // 需要认证
+    }
+  })
+}

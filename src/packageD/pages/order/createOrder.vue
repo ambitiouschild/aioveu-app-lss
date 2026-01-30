@@ -49,7 +49,7 @@
         <text class="name">可我不敌可爱小店</text>
       </view>
 
-      <!-- 商品列表 -->
+      <!-- 商品列表  ￥-->
       <view
         class="g-item"
         v-for="(item, index) in orderItems"
@@ -794,11 +794,12 @@ page {
         color: $font-color-dark;
         font-weight: 600;
 
-        &:before {
-          content: '¥';
-          font-size: 24upx;
-          margin-right: 2upx;
-        }
+        //这里加了货币符号
+        //&:before {
+        //  content: '¥';
+        //  font-size: 24upx;
+        //  margin-right: 2upx;
+        //}
       }
 
       .number {
