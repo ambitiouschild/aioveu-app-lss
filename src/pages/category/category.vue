@@ -631,8 +631,6 @@ const tabtap = async (item) => {
   currentId.value = item.id
 
 
-  // ✅ 调用 loadData
-  await loadData()
 
 //是的，如果是点击展开的方案，需要重新加载数据，因为是在前端做缓存而不是实时更新。但更好的方案是使用响应式自动更新
   //方案1：实时刷新（推荐）
@@ -665,6 +663,11 @@ const tabtap = async (item) => {
         if (index !== -1 && slist.value[index].top !== undefined) {
           tabScrollTop.value = slist.value[index].top
         }
+
+    // ✅ 调用 loadData
+    await loadData()
+
+
   } catch (error) {
     console.error('加载分类数据失败:', error)
   } finally {
