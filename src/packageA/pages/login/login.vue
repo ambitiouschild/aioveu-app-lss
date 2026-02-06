@@ -7,9 +7,7 @@
       <!-- 小程序登录授权界面 -->
       <!-- #ifdef MP -->
       <button class="confirm-btn" @click.stop="getUserProfile">小程序登录授权</button>
-      <view class="tip">
-        温馨提示:未注册可我不敌可爱小店的用户,初次登录时将完成注册
-      </view>
+      <view class="tip">温馨提示:未注册可我不敌可爱小店的用户,初次登录时将完成注册</view>
       <!-- #endif -->
 
       <!-- H5、Android、IOS登录授权界面 -->
@@ -17,26 +15,40 @@
       <view class="left-top-sign">LOGIN</view>
       <view class="welcome">欢迎回来！</view>
       <view class="input-content">
-        <view class="input-item" style="position: relative;">
+        <view class="input-item" style="position: relative">
           <text class="tit">手机号码</text>
-          <input :value="mobile" placeholder="请输入手机号码" maxlength="11" data-key="mobile"
-                 @input="inputChange" />
-          <button :disabled="!isCorretPhoneNumber" class="sms-code-btn"
-                  :class="{correct_phone_number:isCorretPhoneNumber}" @click.prevent="getSmsCode">
-            {{countdown>0 ? `(${countdown}s)已发送` : '获取验证码'}}
+          <input
+            :value="mobile"
+            placeholder="请输入手机号码"
+            maxlength="11"
+            data-key="mobile"
+            @input="inputChange"
+          />
+          <button
+            :disabled="!isCorretPhoneNumber"
+            class="sms-code-btn"
+            :class="{ correct_phone_number: isCorretPhoneNumber }"
+            @click.prevent="getSmsCode"
+          >
+            {{ countdown > 0 ? `(${countdown}s)已发送` : "获取验证码" }}
           </button>
         </view>
 
         <view class="input-item">
           <text class="tit">验证码</text>
-          <input :value="verifyCode" placeholder="6位随机数字组合" placeholder-class="input-empty" maxlength="20"
-                 data-key="verifyCode" @input="inputChange" @confirm="toLogin" />
+          <input
+            :value="verifyCode"
+            placeholder="6位随机数字组合"
+            placeholder-class="input-empty"
+            maxlength="20"
+            data-key="verifyCode"
+            @input="inputChange"
+            @confirm="toLogin"
+          />
         </view>
       </view>
       <button class="confirm-btn" @click="toLogin" :disabled="logining">登录</button>
-      <view class="tip">
-        默认手机号码/验证码: 18866668888/666666
-      </view>
+      <view class="tip">默认手机号码/验证码: 18866668888/666666</view>
       <!-- #endif -->
     </view>
     <view class="register-section">
@@ -48,15 +60,15 @@
 
 <script setup>
 // 这是使用 <script setup>语法的纯 Vue3 版本，没有使用 export default和 setup()函数。所有的响应式数据、计算属性和方法都在 <script setup>中直接声明，这是 Vue3 最简洁的写法。
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useUserStore } from '@/store';
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { useUserStore } from "@/store";
 // import { sendSmsCode } from '@/api/user';
 
 const userStore = useUserStore();
 
 // 响应式数据
-const mobile = ref('18866668888');
-const verifyCode = ref('666666');
+const mobile = ref("13061656199");
+const verifyCode = ref("666666");
 const password = ref(undefined);
 const logining = ref(false);
 const countdown = ref(0);
@@ -84,9 +96,9 @@ onUnmounted(() => {
 // 方法
 const inputChange = (e) => {
   const key = e.currentTarget.dataset.key;
-  if (key === 'mobile') {
+  if (key === "mobile") {
     mobile.value = e.detail.value;
-  } else if (key === 'verifyCode') {
+  } else if (key === "verifyCode") {
     verifyCode.value = e.detail.value;
   }
 };
@@ -99,15 +111,15 @@ const navBack = () => {
   } else {
     // 否则跳转到首页
     uni.switchTab({
-      url: '/pages/index/index'
+      url: "/pages/index/index",
     });
   }
 };
 
 const toRegist = () => {
   uni.showToast({
-    title: '去注册',
-    icon: 'none'
+    title: "去注册",
+    icon: "none",
   });
 };
 
@@ -120,7 +132,7 @@ const getUserProfile = async () => {
   if (logining.value) return;
 
   uni.showLoading({
-    title: "微信授权登录中"
+    title: "微信授权登录中",
   });
   logining.value = true;
 
@@ -149,9 +161,9 @@ const getUserProfile = async () => {
     // 4. 登录成功处理
     uni.hideLoading();
     uni.showToast({
-      title: '登录成功',
-      icon: 'success',
-      duration: 1500
+      title: "登录成功",
+      icon: "success",
+      duration: 1500,
     });
 
     // 5. 延迟跳转，让toast显示完整
@@ -161,10 +173,10 @@ const getUserProfile = async () => {
 
     uni.navigateBack();
   } catch (error) {
-    console.error('微信登录失败:', error);
+    console.error("微信登录失败:", error);
     uni.showToast({
-      title: '微信登录失败',
-      icon: 'none'
+      title: "微信登录失败",
+      icon: "none",
     });
     uni.hideLoading();
     logining.value = false;
@@ -175,18 +187,18 @@ const getUserProfile = async () => {
 const getWxCode = () => {
   return new Promise((resolve, reject) => {
     uni.login({
-      provider: 'weixin',
-      success: res => {
+      provider: "weixin",
+      success: (res) => {
         if (res.code) {
           resolve(res.code);
         } else {
-          reject(new Error('获取微信code失败'));
+          reject(new Error("获取微信code失败"));
         }
       },
-      fail: err => {
+      fail: (err) => {
         console.error("微信登录失败:", err);
-        reject(new Error('微信登录失败: ' + err.errMsg));
-      }
+        reject(new Error("微信登录失败: " + err.errMsg));
+      },
     });
   });
 };
@@ -207,7 +219,7 @@ const navigateAfterLogin = () => {
     // 否则跳转到首页
     console.log("跳转到首页");
     uni.switchTab({
-      url: '/pages/index/index'
+      url: "/pages/index/index",
     });
   }
 
@@ -226,17 +238,19 @@ const getSmsCode = () => {
       }
     }, 1000);
 
-    sendSmsCode(mobile.value).then(res => {
-      uni.showToast({
-        title: '短信已发送',
-        icon: 'success'
+    sendSmsCode(mobile.value)
+      .then((res) => {
+        uni.showToast({
+          title: "短信已发送",
+          icon: "success",
+        });
+      })
+      .catch((error) => {
+        uni.showToast({
+          title: "发送失败",
+          icon: "none",
+        });
       });
-    }).catch(error => {
-      uni.showToast({
-        title: '发送失败',
-        icon: 'none'
-      });
-    });
   }
 };
 
@@ -249,30 +263,49 @@ const toLogin = async () => {
   try {
     // 显示加载中
     uni.showLoading({
-      title: '登录中...'
+      title: "登录中...",
     });
+
+    console.log("=== 发送参数检查 ===");
+    console.log("1. mobile.value:", mobile.value);
+    console.log("2. verifyCode.value:", verifyCode.value);
+    console.log("3. mobile.value类型:", typeof mobile.value);
+    console.log("4. verifyCode.value类型:", typeof verifyCode.value);
 
     // 调用 Pinia store 的 login 方法
-    await userStore.login({
-      code: verifyCode.value,
-      mobile: mobile.value
+    await userStore.loginBySms(mobile.value, verifyCode.value);
+
+    // 3. 获取用户信息
+    await userStore.getInfo();
+    console.log("3. 获取用户信息...", userStore.getInfo());
+
+    // 4. 登录成功处理
+    uni.hideLoading();
+    uni.showToast({
+      title: "登录成功",
+      icon: "success",
+      duration: 1500,
     });
 
-    // 获取用户信息
-    await userStore.getUserInfo();
+    // 5. 延迟跳转，让toast显示完整
+    setTimeout(() => {
+      navigateAfterLogin();
+    }, 1500);
 
-    const pages = getCurrentPages();
-    if (pages.length > 1) {
-      uni.navigateBack();
-    } else {
-      console.log("跳转首页");
-      // 跳转首页
-      uni.switchTab({
-        url: '/pages/index/index'
-      });
-    }
+    uni.navigateBack();
+
+    // const pages = getCurrentPages();
+    // if (pages.length > 1) {
+    //   uni.navigateBack();
+    // } else {
+    //   console.log("跳转首页");
+    //   // 跳转首页
+    //   uni.switchTab({
+    //     url: "/pages/index/index",
+    //   });
+    // }
   } catch (error) {
-    console.error('登录失败:', error);
+    console.error("登录失败:", error);
     logining.value = false;
   }
 };
@@ -322,7 +355,7 @@ const toLogin = async () => {
   &:before,
   &:after {
     display: block;
-    content: '';
+    content: "";
     width: 400upx;
     height: 80upx;
     background: #b4f3e2;

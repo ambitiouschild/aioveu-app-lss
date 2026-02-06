@@ -39,7 +39,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { onLoad, onShow } from '@dcloudio/uni-app';
-import { list } from '@/api/ums/address';
+import { list } from '@/packageD/api/ums/address';
 import { useUserStore } from '@/store';
 
 // 使用组合式API定义响应式数据

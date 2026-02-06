@@ -1,17 +1,13 @@
 <template>
   <view>
     <!-- 收货地址区域 - 整个区域可点击跳转 -->
-    <navigator
-      url="/packageD/pages/address/address?source=1"
-      class="address-section"
-    >
+    <navigator url="/packageD/pages/address/address?source=1" class="address-section">
       <!-- 地址内容区域 -->
       <view class="order-content">
         <!-- 地址图标 -->
         <text class="yticon icon-shouhuodizhi"></text>
 
         <!-- ... 地址信息显示 ... -->
-
 
         <!-- 已选择地址时显示地址详情 -->
         <view v-if="selectedAddress" class="cen">
@@ -45,16 +41,15 @@
     <view class="goods-section">
       <!-- 商家头部信息 -->
       <view class="g-header b-b">
-        <image class="logo" src="@/static/pages/order/logo.png" />
+        <image
+          class="logo"
+          src="https://minio.aioveu.com/aioveu/aioveu-server/pages/order/logo.png"
+        />
         <text class="name">可我不敌可爱小店</text>
       </view>
 
       <!-- 商品列表  ￥-->
-      <view
-        class="g-item"
-        v-for="(item, index) in orderItems"
-        :key="item.skuId"
-      >
+      <view class="g-item" v-for="(item, index) in orderItems" :key="item.skuId">
         <image :src="item.picUrl"></image>
         <view class="right">
           <text class="title clamp">{{ item.skuName }}</text>
@@ -70,20 +65,11 @@
     <!-- 优惠明细区域 -->
     <view class="yt-list">
       <!-- 优惠券选择 -->
-      <view
-        class="yt-list-cell b-b"
-        @click="toggleMask('show')"
-      >
+      <view class="yt-list-cell b-b" @click="toggleMask('show')">
         <view class="cell-icon">券</view>
         <text class="cell-tit clamp">优惠券</text>
-        <text
-          class="cell-tip active"
-          v-if="couponTitle === ''"
-        >选择优惠券</text>
-        <text
-          class="cell-tip active"
-          v-else
-        >{{ couponTitle }}</text>
+        <text class="cell-tip active" v-if="couponTitle === ''">选择优惠券</text>
+        <text class="cell-tip active" v-else>{{ couponTitle }}</text>
         <text class="cell-more wanjia wanjia-gengduo-d"></text>
       </view>
 
@@ -112,14 +98,8 @@
       <!-- 运费 -->
       <view class="yt-list-cell b-b">
         <text class="cell-tit clamp">运费</text>
-        <text
-          class="cell-tip"
-          v-if="freightAmount === 0"
-        >免运费</text>
-        <text
-          class="cell-tip"
-          v-else
-        >-￥{{ formatMoney(freightAmount) }}</text>
+        <text class="cell-tip" v-if="freightAmount === 0">免运费</text>
+        <text class="cell-tip" v-else>-￥{{ formatMoney(freightAmount) }}</text>
       </view>
 
       <!-- 备注 -->
@@ -142,10 +122,7 @@
         <text class="price-tip">￥</text>
         <text class="price">{{ formatMoney(paymentAmount) }}</text>
       </view>
-      <text
-        class="submit"
-        @click="handleSubmit"
-      >提交订单</text>
+      <text class="submit" @click="handleSubmit">提交订单</text>
     </view>
 
     <!-- 优惠券面板 -->
@@ -154,10 +131,7 @@
       :class="maskState === 0 ? 'none' : maskState === 1 ? 'show' : ''"
       @click="toggleMask"
     >
-      <view
-        class="mask-content"
-        @click.stop="handleStopPropagation"
-      >
+      <view class="mask-content" @click.stop="handleStopPropagation">
         <!-- 优惠券列表 -->
         <view
           class="coupon-item"
@@ -188,36 +162,36 @@
 // ==========================================
 // 导入依赖
 // ==========================================
-import { ref, onMounted, watch, computed } from 'vue';
-import { onShow, onLoad } from '@dcloudio/uni-app';
-import { confirm, submit as submitOrder } from '@/api/oms/order';
-import { list as getAddressList } from '@/api/ums/address';
+import { ref, onMounted, watch, computed } from "vue";
+import { onShow, onLoad } from "@dcloudio/uni-app";
+import { confirm, submit as submitOrder } from "@/packageD/api/oms/order";
+import { list as getAddressList } from "@/packageD/api/ums/address";
 
 // ==========================================
 // 响应式数据定义
 // ==========================================
-const orderToken = ref(undefined);          // 订单提交令牌，防止订单重复提交
-const maskState = ref(0);                   // 优惠券面板显示状态：0-隐藏，1-显示
-const remark = ref(undefined);              // 订单备注
-const couponId = ref(0);                    // 选中的优惠券ID
-const couponTitle = ref(undefined);         // 选中的优惠券标题
-const couponAmount = ref(0);                // 优惠金额
-const freightAmount = ref(0);               // 运费金额
-const paymentAmount = ref(0);               // 实际支付金额
-const couponList = ref([]);                 // 优惠券列表
-const totalAmount = ref(0);                 // 商品总金额
-const selectedAddress = ref(undefined);     // 选中的收货地址
-const orderItems = ref([]);                 // 订单商品列表
+const orderToken = ref(undefined); // 订单提交令牌，防止订单重复提交
+const maskState = ref(0); // 优惠券面板显示状态：0-隐藏，1-显示
+const remark = ref(undefined); // 订单备注
+const couponId = ref(0); // 选中的优惠券ID
+const couponTitle = ref(undefined); // 选中的优惠券标题
+const couponAmount = ref(0); // 优惠金额
+const freightAmount = ref(0); // 运费金额
+const paymentAmount = ref(0); // 实际支付金额
+const couponList = ref([]); // 优惠券列表
+const totalAmount = ref(0); // 商品总金额
+const selectedAddress = ref(undefined); // 选中的收货地址
+const orderItems = ref([]); // 订单商品列表
 
 // ==========================================
 // 生命周期钩子
 // ==========================================
 onLoad((options) => {
-  console.log('========>> 进入订单创建页面, 参数:', options);
+  console.log("========>> 进入订单创建页面, 参数:", options);
 });
 
 onShow(() => {
-  console.log('========>> 订单创建页面显示');
+  console.log("========>> 订单创建页面显示");
 
   // 获取页面参数
   const pages = getCurrentPages();
@@ -233,11 +207,10 @@ onShow(() => {
 // ==========================================
 // 计算商品总金额
 const calculateTotalAmount = () => {
-
-  console.log('【开始计算】商品总金额，订单商品列表:', orderItems.value);
+  console.log("【开始计算】商品总金额，订单商品列表:", orderItems.value);
 
   if (!orderItems.value || orderItems.value.length === 0) {
-    console.log('【计算结果】订单商品为空，总金额设为0');
+    console.log("【计算结果】订单商品为空，总金额设为0");
     totalAmount.value = 0;
     return;
   }
@@ -251,38 +224,40 @@ const calculateTotalAmount = () => {
     const price = item.price || 0;
     totalAmount.value = quantity * price;
 
-    console.log('【单个商品】计算详情:', {
+    console.log("【单个商品】计算详情:", {
       商品名称: item.skuName,
       商品ID: item.skuId,
       数量: quantity,
       单价: price,
-      小计: totalAmount.value
+      小计: totalAmount.value,
     });
-
   } else {
     // 多个商品
-    totalAmount.value  = orderItems.value.reduce((total, item) => {
-
+    totalAmount.value = orderItems.value.reduce((total, item) => {
       const quantity = item.quantity || 0;
       const price = item.price || 0;
       const itemTotal = quantity * price;
 
-      console.log('【商品明细】', {
+      console.log("【商品明细】", {
         商品名称: item.skuName,
         数量: quantity,
         单价: price,
-        小计: itemTotal
+        小计: itemTotal,
       });
 
       return total + itemTotal;
     }, 0);
 
-    console.log('【多个商品】计算完成，商品数量:{},总计：{}', orderItems.value.length, totalAmount.value);
+    console.log(
+      "【多个商品】计算完成，商品数量:{},总计：{}",
+      orderItems.value.length,
+      totalAmount.value
+    );
   }
 
-  console.log('【计算结果】商品总金额:', {
+  console.log("【计算结果】商品总金额:", {
     新值: totalAmount.value,
-    订单商品数: orderItems.value.length
+    订单商品数: orderItems.value.length,
   });
 
   // 重新计算支付金额
@@ -297,22 +272,22 @@ const calculateTotalAmount = () => {
  * @param {Object} params - 页面参数
  */
 const loadData = async (params) => {
-  console.log('加载订单创建数据, 参数:', params);
+  console.log("加载订单创建数据, 参数:", params);
 
   // 显示加载状态
-  uni.showLoading({ title: '加载中...' });
+  uni.showLoading({ title: "加载中..." });
 
   try {
     // 获取SKU ID参数
-    const skuIds = params?.skuIds;  // 正确的参数名
-    console.log("获取SKU ID参数",skuIds);
+    const skuIds = params?.skuIds; // 正确的参数名
+    console.log("获取SKU ID参数", skuIds);
     if (!skuIds) {
-      throw new Error('缺少商品参数');
+      throw new Error("缺少商品参数");
     }
 
     // 调用订单确认接口
     const response = await confirm(skuIds);
-    console.log('订单确认接口响应:', response);
+    console.log("订单确认接口响应:", response);
 
     // 解构响应数据
     const { orderToken: token, orderItems: items, addresses } = response || {};
@@ -322,10 +297,10 @@ const loadData = async (params) => {
 
     //在 loadData函数中，从接口返回的地址数据中选择默认地址
     // 处理收货地址
-    console.log('地址处理逻辑是在订单确认之前完成的');
+    console.log("地址处理逻辑是在订单确认之前完成的");
     if (addresses && addresses.length > 0) {
       // 优先选择默认地址
-      const defaultAddress = addresses.find(item => item.defaulted === 1);
+      const defaultAddress = addresses.find((item) => item.defaulted === 1);
       selectedAddress.value = defaultAddress || addresses[0];
     } else {
       selectedAddress.value = undefined;
@@ -337,23 +312,20 @@ const loadData = async (params) => {
     // 计算商品总金额
     calculateTotalAmount();
 
-
     // 模拟优惠券数据（实际项目中应从接口获取）
     couponList.value = [
-      { id: 1, title: '新用户优惠券', price: 5 },
-      { id: 2, title: '满减优惠券', price: 10 }
+      { id: 1, title: "新用户优惠券", price: 5 },
+      { id: 2, title: "满减优惠券", price: 10 },
     ];
-
   } catch (error) {
-    console.error('加载订单数据失败:', error);
+    console.error("加载订单数据失败:", error);
 
     // 显示错误提示
     uni.showToast({
-      title: '加载失败',
-      icon: 'none',
-      duration: 2000
+      title: "加载失败",
+      icon: "none",
+      duration: 2000,
     });
-
   } finally {
     // 隐藏加载状态
     uni.hideLoading();
@@ -365,29 +337,29 @@ const loadData = async (params) => {
  * @param {string} type - 面板状态：'show'显示，其他隐藏
  */
 const toggleMask = (type) => {
-  console.log('切换优惠券面板状态:', type);
+  console.log("切换优惠券面板状态:", type);
 
   // 如果没有优惠券，不显示面板
   if (couponList.value.length === 0) {
     uni.showToast({
-      title: '暂无可用优惠券',
-      icon: 'none',
-      duration: 1500
+      title: "暂无可用优惠券",
+      icon: "none",
+      duration: 1500,
     });
     return;
   }
 
-  if (type === 'show') {
+  if (type === "show") {
     // 显示面板
-    maskState.value = 2;  // 过渡状态
+    maskState.value = 2; // 过渡状态
     setTimeout(() => {
-      maskState.value = 1;  // 显示状态
+      maskState.value = 1; // 显示状态
     }, 10);
   } else {
     // 隐藏面板
-    maskState.value = 2;  // 过渡状态
+    maskState.value = 2; // 过渡状态
     setTimeout(() => {
-      maskState.value = 0;  // 隐藏状态
+      maskState.value = 0; // 隐藏状态
     }, 300);
   }
 };
@@ -407,7 +379,7 @@ const calculatePaymentAmount = () => {
     paymentAmount.value = 0;
   }
 
-  console.log('计算支付金额（这是分）:', { total, coupon, freight, payment: paymentAmount.value });
+  console.log("计算支付金额（这是分）:", { total, coupon, freight, payment: paymentAmount.value });
 };
 
 /**
@@ -415,7 +387,7 @@ const calculatePaymentAmount = () => {
  * @param {Object} coupon - 优惠券对象
  */
 const handleChangeCoupon = (coupon) => {
-  console.log('选择优惠券:', coupon);
+  console.log("选择优惠券:", coupon);
 
   if (!coupon) {
     return;
@@ -434,9 +406,9 @@ const handleChangeCoupon = (coupon) => {
 
   // 显示提示
   uni.showToast({
-    title: '已选择优惠券',
-    icon: 'success',
-    duration: 1500
+    title: "已选择优惠券",
+    icon: "success",
+    duration: 1500,
   });
 };
 
@@ -452,14 +424,14 @@ const handleStopPropagation = () => {
  * 提交订单
  */
 const handleSubmit = async () => {
-  console.log('提交订单');
+  console.log("提交订单");
 
   // 验证收货地址
   if (!selectedAddress.value) {
     uni.showToast({
-      title: '请选择收货地址',
-      icon: 'none',
-      duration: 2000
+      title: "请选择收货地址",
+      icon: "none",
+      duration: 2000,
     });
     return;
   }
@@ -467,126 +439,123 @@ const handleSubmit = async () => {
   // 验证订单商品
   if (!orderItems.value || orderItems.value.length === 0) {
     uni.showToast({
-      title: '订单商品不能为空',
-      icon: 'none',
-      duration: 2000
+      title: "订单商品不能为空",
+      icon: "none",
+      duration: 2000,
     });
     return;
   }
 
   // 构建提交数据
   const submitData = {
-    orderToken: orderToken.value,         // 订单提交令牌，防止重复提交
-    orderItems: orderItems.value,         // 订单商品列表
-    totalAmount: totalAmount.value,       // 订单商品总价，用于后台验价
+    orderToken: orderToken.value, // 订单提交令牌，防止重复提交
+    orderItems: orderItems.value, // 订单商品列表
+    totalAmount: totalAmount.value, // 订单商品总价，用于后台验价
     shippingAddress: selectedAddress.value, // 收货地址
-    remark: remark.value || '',           // 订单备注
-    couponAmount: couponAmount.value,     // 优惠金额金额
-    freightAmount: freightAmount.value,   // 运费金额金额
-    paymentAmount: paymentAmount.value,   // 订单支付金额
-    orderSource: 'APP'                    // 订单来源
+    remark: remark.value || "", // 订单备注
+    couponAmount: couponAmount.value, // 优惠金额金额
+    freightAmount: freightAmount.value, // 运费金额金额
+    paymentAmount: paymentAmount.value, // 订单支付金额
+    orderSource: "APP", // 订单来源
   };
 
-  console.log('订单提交数据:', submitData);
+  console.log("订单提交数据:", submitData);
 
   //确认订单页面，提交后应该生成订单，然后跳转到支付页面让用户选择支付方式并完成支付。这不是直接支付，是正确的流程。
   // 确认对话框
   uni.showModal({
-    title: '确认订单',
+    title: "确认订单",
     content: `确认支付 ¥${formatMoney(paymentAmount.value)} 吗？`,
-    confirmText: '提交订单',
-    confirmColor: '#fa436a',
+    confirmText: "提交订单",
+    confirmColor: "#fa436a",
     success: async (res) => {
       if (res.confirm) {
         try {
           // 显示加载状态
           uni.showLoading({
-            title: '提交中...',
-            mask: true  // 添加遮罩，防止重复点击
+            title: "提交中...",
+            mask: true, // 添加遮罩，防止重复点击
           });
 
           // 禁用按钮，防止重复提交
           // isSubmitting.value = true;
-          console.log('【订单提交】开始提交，数据:', JSON.stringify(submitData, null, 2));
+          console.log("【订单提交】开始提交，数据:", JSON.stringify(submitData, null, 2));
 
           // 调用订单提交接口
           const response = await submitOrder(submitData);
-          console.log('【订单提交】响应:', response);
+          console.log("【订单提交】响应:", response);
 
           // 获取订单号
           const orderSn = response;
           if (!orderSn) {
-            throw new Error('订单提交失败，未返回订单号');
+            throw new Error("订单提交失败，未返回订单号");
           }
 
-          console.log('【订单提交】提交成功，订单号:', orderSn);
+          console.log("【订单提交】提交成功，订单号:", orderSn);
 
           // 跳转到支付页面
 
-          console.log('【页面跳转】跳转到支付页面');
+          console.log("【页面跳转】跳转到支付页面");
           uni.redirectTo({
             url: `/packageD/pages/money/pay?orderSn=${orderSn}&paymentAmount=${paymentAmount.value}`,
             fail: (err) => {
-              console.error('跳转到支付页失败:', err);
+              console.error("跳转到支付页失败:", err);
               uni.showToast({
-                title: '跳转失败',
-                icon: 'none',
-                duration: 2000
+                title: "跳转失败",
+                icon: "none",
+                duration: 2000,
               });
               // 跳转失败时，可以提供其他操作
               showOrderResult(orderSn);
-
-            }
+            },
           });
-
         } catch (error) {
-          console.error('订单提交失败:', error);
+          console.error("订单提交失败:", error);
 
           // 隐藏加载状态
           uni.hideLoading();
 
           // 根据错误类型显示不同的提示
-          let errorMessage = '订单提交失败';
-          let errorDetail = '';
+          let errorMessage = "订单提交失败";
+          let errorDetail = "";
 
           if (error.message) {
             errorDetail = error.message;
 
-            if (error.message.includes('商品库存不足')) {
-              errorMessage = '商品库存不足，请返回购物车修改';
-            } else if (error.message.includes('重复提交')) {
-              errorMessage = '请勿重复提交订单';
-            } else if (error.message.includes('价格发生变动')) {
-              errorMessage = '商品价格已变化，请重新确认';
-            } else if (error.message.includes('令牌')) {
-              errorMessage = '页面已过期，请刷新后重试';
+            if (error.message.includes("商品库存不足")) {
+              errorMessage = "商品库存不足，请返回购物车修改";
+            } else if (error.message.includes("重复提交")) {
+              errorMessage = "请勿重复提交订单";
+            } else if (error.message.includes("价格发生变动")) {
+              errorMessage = "商品价格已变化，请重新确认";
+            } else if (error.message.includes("令牌")) {
+              errorMessage = "页面已过期，请刷新后重试";
             }
           }
 
-          console.error('【订单提交】错误详情:', errorDetail);
+          console.error("【订单提交】错误详情:", errorDetail);
 
           // 显示错误提示   uni.showToast并没有 success回调函数，使用 showModal（推荐），showModal没有 icon和 duration参数
           uni.showModal({
-            title: '订单提交失败',
+            title: "订单提交失败",
             content: errorMessage,
             showCancel: false,
-            confirmText: '确定',
-            confirmColor: '#fa436a',
+            confirmText: "确定",
+            confirmColor: "#fa436a",
             success: (modalRes) => {
               // 用户点击确定后
-              if (error.message && error.message.includes('商品库存不足')) {
+              if (error.message && error.message.includes("商品库存不足")) {
                 // 库存不足时返回购物车
                 uni.navigateBack();
               }
-            }
+            },
           });
-
         } finally {
           // 隐藏加载状态
           uni.hideLoading();
         }
       }
-    }
+    },
   });
 };
 
@@ -600,13 +569,13 @@ const handleSubmit = async () => {
  */
 const formatMoney = (money) => {
   if (money === undefined || money === null || isNaN(money)) {
-    return '0.00';
+    return "0.00";
   }
 
   // 确保是数字
   const amount = Number(money);
   if (isNaN(amount)) {
-    return '0.00';
+    return "0.00";
   }
 
   // 分转元，保留两位小数
@@ -1027,7 +996,7 @@ page {
       position: absolute;
       left: 0;
       bottom: 0;
-      content: '';
+      content: "";
       width: 100%;
       height: 0;
       border-bottom: 1px dashed #e0e0e0;
@@ -1076,7 +1045,7 @@ page {
       line-height: 1.2;
 
       &:before {
-        content: '¥';
+        content: "¥";
         font-size: 30upx;
       }
     }

@@ -174,7 +174,7 @@
 import { onLoad, onReachBottom } from "@dcloudio/uni-app";
 import { ref, reactive } from 'vue';
 
-import LogAPI, { LogVO, LogPageQuery } from "@/api/system/log";
+import LogAPI, { LogVO, LogPageQuery } from "@/packageB/api/system/log";
 
 // 状态管理
 const loading = ref(false);

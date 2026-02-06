@@ -85,7 +85,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { add, update } from '@/api/ums/address';
+import { add, update } from '@/packageD/api/ums/address';
 import { useUserStore } from '@/store';
 // 地址数据
 const addressData = ref({

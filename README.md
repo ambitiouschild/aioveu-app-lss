@@ -201,7 +201,10 @@ aioveu-app/                        # aioveu-app项目根目录
 - 本地打包
 
   ```
-  npm run build:prod
+  pnpm run build:prod
+  ```
+    ```
+  pnpm run build:h5
   ```
 
   生成的静态文件位于项目根目录 dist 文件夹下

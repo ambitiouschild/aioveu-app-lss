@@ -13,9 +13,15 @@
         <text>价格</text>
         <view class="p-box">
           <!-- 价格升序图标 -->
-          <text :class="{ active: priceOrder === 1 && filterIndex === 2 }" class="yticon icon-shang"></text>
+          <text
+            :class="{ active: priceOrder === 1 && filterIndex === 2 }"
+            class="yticon icon-shang"
+          ></text>
           <!-- 价格降序图标 -->
-          <text :class="{ active: priceOrder === 2 && filterIndex === 2 }" class="yticon icon-shang xia"></text>
+          <text
+            :class="{ active: priceOrder === 2 && filterIndex === 2 }"
+            class="yticon icon-shang xia"
+          ></text>
         </view>
       </view>
       <!-- 分类筛选按钮 -->
@@ -24,10 +30,17 @@
 
     <!-- 商品列表 -->
     <view class="goods-list">
-      <view v-for="(item, index) in goodsList" :key="item.id || index" class="goods-item" @click="navToDetailPage(item)">
-        <view class="image-wrapper">
-          <image :src="item.picUrl" mode="aspectFill" lazy-load></image>
-        </view>
+      <view
+        v-for="(item, index) in goodsList"
+        :key="item.id || index"
+        class="goods-item"
+        @click="navToDetailPage(item)"
+      >
+        <image :src="item.picUrl" mode="aspectFill" lazy-load class="goods-image"></image>
+<!--        <view class="image-wrapper">-->
+<!--          &lt;!&ndash;          H5 端对 <image>标签的渲染与小程序端不同。在小程序里 <image>是原生组件，但在 H5 里它会被转换为 <img>标签，可能样式不兼容。使用条件编译（推荐）&ndash;&gt;-->
+<!--          <image :src="item.picUrl" mode="aspectFill" lazy-load></image>-->
+<!--        </view>-->
         <text class="title clamp">{{ item.name }}</text>
         <view class="price-box">
           <text class="price">{{ formatPrice(item.price) }}</text>
@@ -72,17 +85,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue';
-import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
+import { ref, computed, onMounted, onUnmounted, onActivated, onDeactivated } from "vue";
+import { onLoad, onPageScroll, onPullDownRefresh, onReachBottom } from "@dcloudio/uni-app";
 // import uniLoadMore from '@/components/uni-load-more/uni-load-more.vue';
-import { getCategoryList } from '@/api/pms/category';
-import { listSpuPages } from '@/api/pms/goods';
+import { getCategoryList } from "@/api/pms/category";
+import { listSpuPages } from "@/api/pms/goods";
 
 // 响应式数据定义
 const cateMaskState = ref(0); // 分类面板状态: 0-隐藏, 1-显示, 2-过渡中
-const headerPosition = ref('fixed'); // 导航栏定位
-const headerTop = ref('0px'); // 导航栏顶部距离
-const loadingType = ref('more'); // 加载状态: more-更多, loading-加载中, nomore-无更多
+const headerPosition = ref("fixed"); // 导航栏定位
+const headerTop = ref("0px"); // 导航栏顶部距离
+const loadingType = ref("more"); // 加载状态: more-更多, loading-加载中, nomore-无更多
 const filterIndex = ref(0); // 当前筛选索引: 0-综合, 1-销量, 2-价格
 const cateId = ref(0); // 当前选中的分类ID
 const priceOrder = ref(0); // 价格排序: 0-默认, 1-升序, 2-降序
@@ -94,30 +107,29 @@ const queryParams = ref({
   pageNum: 1, // 当前页码
   pageSize: 10, // 每页数量
   categoryId: undefined, // 分类ID
-  sort: 'desc', // 排序方式
-  sortField: null // 排序字段
+  sort: "desc", // 排序方式
+  sortField: null, // 排序字段
 });
 
 // 分页信息
 const pagination = ref({
   total: 0, // 总条数
-  totalPages: 0 // 总页数
+  totalPages: 0, // 总页数
 });
 
 // 计算属性：格式化价格（分转元）
 const formatPrice = (price) => {
-  return price ? (price / 100).toFixed(2) : '0.00';
+  return price ? (price / 100).toFixed(2) : "0.00";
 };
 
 // 页面加载
 onLoad((options) => {
-
   // 移除 getCurrentPages() 调用，改用 uni-app 提供的方式获取当前页面信息
-  console.log('🚀 进入商品列表页面', '参数:', options);
+  console.log("🚀 进入商品列表页面", "参数:", options);
 
   // H5端计算顶部安全距离
   // #ifdef H5
-  const pageHead = document.querySelector('uni-page-head');
+  const pageHead = document.querySelector("uni-page-head");
   if (pageHead) {
     headerTop.value = `${pageHead.offsetHeight}px`;
   }
@@ -135,18 +147,18 @@ onLoad((options) => {
 // 页面滚动事件
 onPageScroll((e) => {
   // 兼容iOS端下拉时顶部漂移
-  headerPosition.value = e.scrollTop >= 0 ? 'fixed' : 'absolute';
+  headerPosition.value = e.scrollTop >= 0 ? "fixed" : "absolute";
 });
 
 // 下拉刷新
 onPullDownRefresh(async () => {
-  await loadData('refresh');
+  await loadData("refresh");
   uni.stopPullDownRefresh();
 });
 
 // 上拉加载更多
 onReachBottom(async () => {
-  await loadData('add');
+  await loadData("add");
 });
 
 /**
@@ -161,12 +173,12 @@ const loadCateList = async (fid, sid) => {
     console.log("加载分类数据", response);
     cateList.value = response || [];
     // 加载商品数据
-    await loadData('refresh');
+    await loadData("refresh");
   } catch (error) {
-    console.error('加载分类失败:', error);
+    console.error("加载分类失败:", error);
     uni.showToast({
-      title: '加载分类失败',
-      icon: 'none'
+      title: "加载分类失败",
+      icon: "none",
     });
   }
 };
@@ -176,25 +188,25 @@ const loadCateList = async (fid, sid) => {
  * @param {string} type - 加载类型: 'add'-加载更多, 'refresh'-刷新
  * @param {boolean} showLoading - 是否显示加载提示
  */
-const loadData = async (type = 'add', showLoading = false) => {
+const loadData = async (type = "add", showLoading = false) => {
   // 检查是否有更多数据
-  if (type === 'add' && loadingType.value === 'nomore') {
+  if (type === "add" && loadingType.value === "nomore") {
     return;
   }
 
   // 显示加载状态
   if (showLoading) {
-    uni.showLoading({ title: '正在加载' });
+    uni.showLoading({ title: "正在加载" });
   }
 
   // 重置或增加页码
-  if (type === 'refresh') {
+  if (type === "refresh") {
     queryParams.value.pageNum = 1;
     goodsList.value = [];
-    loadingType.value = 'more';
+    loadingType.value = "more";
   } else {
     queryParams.value.pageNum += 1;
-    loadingType.value = 'loading';
+    loadingType.value = "loading";
   }
 
   // 设置排序参数
@@ -203,39 +215,37 @@ const loadData = async (type = 'add', showLoading = false) => {
   // 设置分类ID
   queryParams.value.categoryId = cateId.value || undefined;
 
-  console.log("开始获取商品分页列表" );
-
+  console.log("开始获取商品分页列表");
 
   try {
     const response = await listSpuPages(queryParams.value);
 
-    console.log("获取商品分页列表", response );
+    console.log("获取商品分页列表", response);
     const { total, list, pages } = response || {};
 
     // 更新分页信息
     pagination.value = { total, totalPages: pages };
 
     // 更新商品列表
-    if (type === 'refresh') {
+    if (type === "refresh") {
       goodsList.value = list || [];
     } else {
       goodsList.value = [...goodsList.value, ...(list || [])];
     }
 
     // 更新加载状态
-    loadingType.value = goodsList.value.length >= total ? 'nomore' : 'more';
-
+    loadingType.value = goodsList.value.length >= total ? "nomore" : "more";
   } catch (error) {
-    console.error('加载商品失败:', error);
+    console.error("加载商品失败:", error);
     uni.showToast({
-      title: '加载商品失败',
-      icon: 'none'
+      title: "加载商品失败",
+      icon: "none",
     });
     // 加载失败时回退页码
-    if (type !== 'refresh') {
+    if (type !== "refresh") {
       queryParams.value.pageNum -= 1;
     }
-    loadingType.value = 'more';
+    loadingType.value = "more";
   } finally {
     if (showLoading) {
       uni.hideLoading();
@@ -248,21 +258,21 @@ const loadData = async (type = 'add', showLoading = false) => {
  */
 const setSortParams = () => {
   let sortField = null; // 默认不传排序字段
-  let sort = 'desc';
+  let sort = "desc";
 
   switch (filterIndex.value) {
     case 1: // 销量排序
-      sortField = 'sales';
+      sortField = "sales";
       break;
     case 2: // 价格排序
-      sortField = 'price';
-      sort = priceOrder.value === 1 ? 'asc' : 'desc';
+      sortField = "price";
+      sort = priceOrder.value === 1 ? "asc" : "desc";
       break;
     // case 0 综合排序不传排序字段
   }
 
-// 更新查询参数
-  queryParams.value.sortField = sortField;   // 可能为null
+  // 更新查询参数
+  queryParams.value.sortField = sortField; // 可能为null
   queryParams.value.sort = sort;
 };
 
@@ -289,11 +299,11 @@ const tabClick = (index) => {
   // 滚动到顶部
   uni.pageScrollTo({
     duration: 300,
-    scrollTop: 0
+    scrollTop: 0,
   });
 
   // 重新加载数据
-  loadData('refresh', true);
+  loadData("refresh", true);
 };
 
 /**
@@ -301,8 +311,8 @@ const tabClick = (index) => {
  * @param {string} type - 操作类型: 'show'-显示, 其他-隐藏
  */
 const toggleCateMask = (type) => {
-  const timer = type === 'show' ? 10 : 300;
-  const state = type === 'show' ? 1 : 0;
+  const timer = type === "show" ? 10 : 300;
+  const state = type === "show" ? 1 : 0;
 
   // 先设置为过渡状态
   cateMaskState.value = 2;
@@ -326,11 +336,11 @@ const changeCate = (item) => {
   // 滚动到顶部
   uni.pageScrollTo({
     duration: 300,
-    scrollTop: 0
+    scrollTop: 0,
   });
 
   // 重新加载数据
-  loadData('refresh', true);
+  loadData("refresh", true);
 };
 
 /**
@@ -340,8 +350,8 @@ const changeCate = (item) => {
 const navToDetailPage = (item) => {
   if (!item || !item.id) {
     uni.showToast({
-      title: '商品信息错误',
-      icon: 'none'
+      title: "商品信息错误",
+      icon: "none",
     });
     return;
   }
@@ -351,19 +361,19 @@ const navToDetailPage = (item) => {
   uni.navigateTo({
     url: `/packageC/pages/product/product?id=${item.id}`,
     fail: (err) => {
-      console.error('跳转失败:', err);
+      console.error("跳转失败:", err);
       // 尝试其他路径格式
       uni.navigateTo({
         url: `/packageC/pages/product/product?id=${item.id}`,
         fail: (err2) => {
-          console.error('再次跳转失败:', err2);
+          console.error("再次跳转失败:", err2);
           uni.showToast({
-            title: '页面跳转失败',
-            icon: 'none'
+            title: "页面跳转失败",
+            icon: "none",
           });
-        }
+        },
       });
-    }
+    },
   });
 };
 
@@ -374,7 +384,6 @@ const stopPrevent = () => {};
 </script>
 
 <style lang="scss" scoped>
-
 /* 页面基础样式 */
 .content {
   background-color: $page-color-base;
@@ -414,7 +423,7 @@ const stopPrevent = () => {};
 
       /* 底部指示条 */
       &::after {
-        content: '';
+        content: "";
         position: absolute;
         left: 50%;
         bottom: 0;
@@ -468,7 +477,7 @@ const stopPrevent = () => {};
 
     /* 左侧分隔线 */
     &::before {
-      content: '';
+      content: "";
       position: absolute;
       left: 0;
       top: 50%;
@@ -536,7 +545,7 @@ const stopPrevent = () => {};
 
     /* 底部边框 */
     &.b-b::after {
-      content: '';
+      content: "";
       position: absolute;
       left: 30rpx;
       right: 0;
@@ -577,11 +586,28 @@ const stopPrevent = () => {};
     border-radius: 12rpx;
     overflow: hidden;
     background-color: #fff;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
 
     &:active {
       transform: scale(0.98);
       opacity: 0.9;
+    }
+
+    /* 直接设置图片样式 */
+    .goods-image {
+      width: 100%;
+      height: 320rpx;
+      border-radius: 8rpx;
+      overflow: hidden;
+      background-color: $bg-color;
+      object-fit: cover;
+      display: block;
+
+      &:hover {
+        transform: scale(1.05);
+      }
     }
 
     /* 商品图片容器 */
@@ -637,7 +663,7 @@ const stopPrevent = () => {};
 
         /* 价格符号 */
         &::before {
-          content: '¥';
+          content: "¥";
           font-size: 24rpx;
           margin-right: 2rpx;
         }

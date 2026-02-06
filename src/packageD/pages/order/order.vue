@@ -207,9 +207,8 @@ import {
 // 导入退款相关的API
   applyRefund as applyRefundApi,
   getRefundDetail,
-  getAfterSalesList
 
-} from '@/api/oms/order';
+} from '@/packageD/api/oms/order';
 
 
 // ==========================================

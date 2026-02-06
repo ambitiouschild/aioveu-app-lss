@@ -27,7 +27,6 @@ const AuthAPI = {
    * @returns 返回 token
    */
   wechatLogin(code: string): Promise<LoginResult> {
-
     // console.log("微信登录接口wechatLogin");
 
     // console.log("微信登录code", code);
@@ -38,12 +37,112 @@ const AuthAPI = {
       method: "POST",
       data: {
         code,
-        grant_type: 'wechat'
+        grant_type: "wechat",
       },
       header: {
         //修改你的 API 文件，使用字符串格式参数
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic bWFsbC1hcHA6MTIzNDU2' // 客户端信息Base64加密，明文：mall-app:123456
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: "Basic bWFsbC1hcHA6MTIzNDU2", // 客户端信息Base64加密，明文：mall-app:123456
+      },
+    });
+  },
+
+  /**
+   * 微信登录接口
+   *
+   * @param code 微信登录code
+   * @returns 返回 token
+   */
+  registerByWechat(code: string): Promise<LoginResult> {
+    // console.log("微信登录接口wechatLogin");
+
+    // console.log("微信登录code", code);
+    //code: "0a106x000bOLFV1Pis000Tsiqh306x0u"传递的应该是字符串而不是对象
+
+    return request<LoginResult>({
+      url: "/aioveu-auth/oauth2/token",
+      method: "POST",
+      data: {
+        code,
+        grant_type: "wechat",
+      },
+      header: {
+        //修改你的 API 文件，使用字符串格式参数
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: "Basic bWFsbC1hcHA6MTIzNDU2", // 客户端信息Base64加密，明文：mall-app:123456
+      },
+    });
+  },
+
+  /**
+   * 发送短信验证码
+   *
+   * @param phoneNumber 手机号
+   * @returns 返回 token
+   */
+  sendSmsCode(phoneNumber: string): Promise<LoginResult> {
+    return request<LoginResult>({
+      url: "/aioveu-auth/oauth2/token",
+      method: "POST",
+      data: {
+        mobile: phoneNumber,
+      },
+      header: {
+        //修改你的 API 文件，使用字符串格式参数
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: "Basic bWFsbC1hcHA6MTIzNDU2", // 客户端信息Base64加密，明文：mall-app:123456
+      },
+    });
+  },
+
+  /**
+   * 手机验证码登录
+   *
+   * @param phoneNumber 手机号 , code
+   * @returns 返回 token
+   */
+  loginBySms(mobile: string, code: string): Promise<LoginResult> {
+    console.log("=== 发送参数检查 ===");
+    console.log("1. mobile:", mobile);
+    console.log("2. verifyCode:", code);
+    console.log("3. mobile类型:", typeof mobile);
+    console.log("4. verifyCode类型:", typeof code);
+
+    return request<LoginResult>({
+      url: "/aioveu-auth/oauth2/token",
+      method: "POST",
+      data: {
+        mobile: mobile,
+        code: code,
+        grant_type: "sms_code",
+      },
+      header: {
+        //修改你的 API 文件，使用字符串格式参数
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: "Basic bWFsbC1hcHA6MTIzNDU2", // 客户端信息Base64加密，明文：mall-app:123456
+      },
+    });
+  },
+
+  /**
+   * 手机验证码登录
+   *
+   * @param phoneNumber 手机号 , code
+   * @returns 返回 token
+   */
+  loginByPassword(phoneNumber: string, password: any): Promise<LoginResult> {
+    return request<LoginResult>({
+      url: "/aioveu-auth/oauth2/token",
+      method: "POST",
+      data: {
+        mobile: phoneNumber,
+        passWord: password,
+        grant_type: "wechat",
+      },
+      header: {
+        //修改你的 API 文件，使用字符串格式参数
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: "Basic bWFsbC1hcHA6MTIzNDU2", // 客户端信息Base64加密，明文：mall-app:123456
       },
     });
   },

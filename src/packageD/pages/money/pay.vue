@@ -127,7 +127,7 @@
 中间不需要再次确认所有订单细节*/
 import { ref, onMounted, computed } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
-import { pay } from '@/api/oms/order.ts';
+import { pay } from '@/packageD/api/oms/order.ts';
 import { useUserStore } from '@/store';
 
 // 获取 Vuex store 实例

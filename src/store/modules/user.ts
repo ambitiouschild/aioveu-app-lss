@@ -58,15 +58,14 @@ export const useUserStore = defineStore("user", () => {
     });
   };
 
-  // 微信登录
+  // 微信登录 修改微信登录方法，添加自动注册功能
   const loginByWechat = (code: string) => {
-
     console.info("开始调用微信登录接口");
 
+    // 1. 先尝试正常登录
     return new Promise((resolve, reject) => {
       AuthAPI.wechatLogin(code)
         .then((data) => {
-
           // console.log("微信登录返回数据:", data);
 
           // 设置 token
@@ -79,21 +78,20 @@ export const useUserStore = defineStore("user", () => {
           }
 
           token.value = accessToken; //将token添加到状态
-          setToken(accessToken);  //将token添加到缓存
+          setToken(accessToken); //将token添加到缓存
 
           // 保存刷新令牌
           if (data.refresh_token) {
-            uni.setStorageSync('refresh_token', data.refresh_token);
+            uni.setStorageSync("refresh_token", data.refresh_token);
           }
 
           // 保存过期时间
           if (data.expires_in) {
             const expiresAt = Date.now() + data.expires_in * 1000;
-            uni.setStorageSync('token_expires_at', expiresAt.toString());
+            uni.setStorageSync("token_expires_at", expiresAt.toString());
           }
 
           console.log("微信登录成功，token已保存");
-
 
           resolve(data);
         })
@@ -103,6 +101,94 @@ export const useUserStore = defineStore("user", () => {
         });
     });
   };
+
+  // 微信登录 修改微信登录方法，添加自动注册功能
+  const registerByWechat = (code: string) => {
+    console.info("调用注册接口");
+
+    // 1. 先尝试正常登录
+    return new Promise((resolve, reject) => {
+      AuthAPI.registerByWechat(code)
+        .then((data) => {
+          // console.log("微信登录返回数据:", data);
+
+          // 设置 token
+          const accessToken = data.access_token || data.accessToken;
+          if (!accessToken) {
+            console.error("登录返回中没有找到access_token字段");
+            console.error("返回数据字段:", Object.keys(data));
+            reject(new Error("登录失败: 未找到访问令牌"));
+            return;
+          }
+
+          token.value = accessToken; //将token添加到状态
+          setToken(accessToken); //将token添加到缓存
+
+          // 保存刷新令牌
+          if (data.refresh_token) {
+            uni.setStorageSync("refresh_token", data.refresh_token);
+          }
+
+          // 保存过期时间
+          if (data.expires_in) {
+            const expiresAt = Date.now() + data.expires_in * 1000;
+            uni.setStorageSync("token_expires_at", expiresAt.toString());
+          }
+
+          console.log("微信登录成功，token已保存");
+
+          resolve(data);
+        })
+        .catch((error) => {
+          console.error("微信登录失败", error);
+          reject(error);
+        });
+    });
+  };
+
+  // 手机验证码登录
+  const loginBySms = (mobile: string , code: string) => {
+    console.info("开始调用手机验证码登录登录接口");
+
+    return new Promise((resolve, reject) => {
+      AuthAPI.loginBySms(mobile,code)
+        .then((data) => {
+          // console.log("微信登录返回数据:", data);
+
+          // 设置 token
+          const accessToken = data.access_token || data.accessToken;
+          if (!accessToken) {
+            console.error("登录返回中没有找到access_token字段");
+            console.error("返回数据字段:", Object.keys(data));
+            reject(new Error("登录失败: 未找到访问令牌"));
+            return;
+          }
+
+          token.value = accessToken; //将token添加到状态
+          setToken(accessToken); //将token添加到缓存
+
+          // 保存刷新令牌
+          if (data.refresh_token) {
+            uni.setStorageSync("refresh_token", data.refresh_token);
+          }
+
+          // 保存过期时间
+          if (data.expires_in) {
+            const expiresAt = Date.now() + data.expires_in * 1000;
+            uni.setStorageSync("token_expires_at", expiresAt.toString());
+          }
+
+          console.log("手机验证码登录登录成功，token已保存");
+
+          resolve(data);
+        })
+        .catch((error) => {
+          console.error("手机验证码登录登录失败", error);
+          reject(error);
+        });
+    });
+  };
+
 
   // 获取用户信息
   const getInfo = () => {
@@ -200,6 +286,7 @@ export const useUserStore = defineStore("user", () => {
     // Actions
     login,
     loginByWechat,
+    loginBySms,
     logout,
     getInfo,
     isUserInfoComplete,

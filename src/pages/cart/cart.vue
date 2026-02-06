@@ -2,10 +2,14 @@
   <view class="container">
     <!-- 空白页：当用户未登录或购物车为空时显示 -->
     <view v-if="!hasLogin || empty === true" class="empty">
-      <image src="/static/pages/cart/emptyCart.jpg" mode="aspectFit"></image>
+      <image
+        src="https://minio.aioveu.com/aioveu/aioveu-server/pages/cart/emptyCart.jpg"
+        mode="aspectFit"
+      ></image>
       <view v-if="hasLogin" class="empty-tips">
         空空如也
-        <navigator class="navigator" v-if="hasLogin" url="../index/index" open-type="switchTab">随便逛逛>
+        <navigator class="navigator" v-if="hasLogin" url="../index/index" open-type="switchTab">
+          随便逛逛>
         </navigator>
       </view>
       <view v-else class="empty-tips">
@@ -28,19 +32,20 @@
                 mode="aspectFill"
                 lazy-load
                 @load="onImageLoad('cartItemList', index)"
-                @error="onImageError('cartItemList', index)">
-              </image>
+                @error="onImageError('cartItemList', index)"
+              ></image>
               <!-- 选择框：控制商品是否选中 -->
               <view
                 class="yticon icon-xuanzhong2 checkbox"
                 :class="{ checked: item.checked }"
-                @click="handleCheckItem(index, item.skuId)">
-              </view>
+                @click="handleCheckItem(index, item.skuId)"
+              ></view>
             </view>
 
             <!-- 商品信息区域 -->
             <view class="item-right">
-              <text class="clamp title">{{ item.spuName }}</text>{{item.skuName}}
+              <text class="clamp title">{{ item.spuName }}</text>
+              {{ item.skuName }}
               <text class="price">¥{{ formatMoney(item.price) }}</text>
               <!-- 数量选择器组件 -->
               <uni-number-box
@@ -51,14 +56,15 @@
                 :isMax="item.count >= item.stock ? true : false"
                 :isMin="item.count === 1"
                 :index="index"
-                @eventChange="(event) => handleChangeCount(event, item.skuId)" />
+                @eventChange="(event) => handleChangeCount(event, item.skuId)"
+              />
             </view>
 
             <!-- 删除按钮 -->
             <text
               class="del-btn yticon icon-fork"
-              @click="removeCartItem_single(item.skuId)">
-            </text>
+              @click="removeCartItem_single(item.skuId)"
+            ></text>
           </view>
         </block>
       </view>
@@ -67,16 +73,15 @@
       <view class="action-section">
         <view class="checkbox">
           <image
-            :src="allChecked ? '/static/pages/cart/selected.png' : '/static/pages/cart/select.png'"
+            :src="
+              allChecked
+                ? 'https://minio.aioveu.com/aioveu/aioveu-server/pages/cart/selected.png'
+                : 'https://minio.aioveu.com/aioveu/aioveu-server/pages/cart/select.png'
+            "
             mode="aspectFit"
-            @click="handleCheckAll()">
-          </image>
-          <view
-            class="clear-btn"
-            :class="{ show: allChecked }"
-            @click="clearCart">
-            清空
-          </view>
+            @click="handleCheckAll()"
+          ></image>
+          <view class="clear-btn" :class="{ show: allChecked }" @click="clearCart">清空</view>
         </view>
 
         <!-- 价格汇总区域 -->
@@ -94,7 +99,8 @@
           type="primary"
           class="no-border confirm-btn"
           @click="handleCreateOrder"
-          :disabled="!hasCheckedItem">
+          :disabled="!hasCheckedItem"
+        >
           去结算
         </button>
       </view>
@@ -106,10 +112,10 @@
 // ==========================================
 // 导入部分
 // ==========================================
-import { ref, computed, onMounted, watch, nextTick } from 'vue';
-import { onShow, onHide, onLoad } from '@dcloudio/uni-app';  // 修改这里
-import { storeToRefs } from 'pinia';
-import { useUserStore } from '@/store';
+import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { onShow, onHide, onLoad } from "@dcloudio/uni-app"; // 修改这里
+import { storeToRefs } from "pinia";
+import { useUserStore } from "@/store";
 
 // 导入购物车相关API
 import {
@@ -118,79 +124,78 @@ import {
   deleteCart,
   addCartItem,
   updateCartItem,
-  removeCartItem
-} from '@/api/oms/cart';
+  removeCartItem,
+} from "@/api/oms/cart";
 
 // 导入自定义组件
-import uniNumberBox from '@/components/uni-number-box.vue';
+import uniNumberBox from "@/components/uni-number-box.vue";
 
 // ==========================================
 // 响应式数据定义
 // ==========================================
-const totalPrice = ref(0);		// 选中商品总价
-const allChecked = ref(false);	// 全选状态
-const empty = ref(false);		// 购物车是否为空
-const cartItemList = ref([]);	// 购物车商品列表
-const coupon = ref(0);			// 优惠金额
+const totalPrice = ref(0); // 选中商品总价
+const allChecked = ref(false); // 全选状态
+const empty = ref(false); // 购物车是否为空
+const cartItemList = ref([]); // 购物车商品列表
+const coupon = ref(0); // 优惠金额
 
 // 获取用户状态
 const userStore = useUserStore();
 const { hasLogin } = storeToRefs(userStore);
 
-
 // ==========================================
 // 页面生命周期钩子
 // ==========================================
 onLoad(() => {
-  console.log('========>> 购物车页面加载');
+  console.log("========>> 购物车页面加载");
 });
 
 // ==========================================
 // 生命周期钩子  使用正确的生命周期钩子  使用 onShow而不是 onShow: function()
 // ==========================================
 
-
 onShow(() => {
-  console.log('========>> 购物车页面显示');
+  console.log("========>> 购物车页面显示");
   // 页面显示时加载购物车数据
   loadData();
 });
 
 onHide(() => {
-  console.log('========>> 购物车页面隐藏');
+  console.log("========>> 购物车页面隐藏");
 });
 
 onUnmounted(() => {
-  console.log('========>> 购物车页面卸载');
+  console.log("========>> 购物车页面卸载");
 });
-
-
 
 // ==========================================
 // 计算属性
 // ==========================================
 // 是否有选中的商品
 const hasCheckedItem = computed(() => {
-  return cartItemList.value.some(item => item.checked);
+  return cartItemList.value.some((item) => item.checked);
 });
 
 // 选中商品的数量
 const checkedItemCount = computed(() => {
-  return cartItemList.value.filter(item => item.checked).length;
+  return cartItemList.value.filter((item) => item.checked).length;
 });
 
-
 // 监听购物车列表变化
-watch(cartItemList, (newList) => {
-  // 更新空状态
-  empty.value = newList.length === 0;
+watch(
+  cartItemList,
+  (newList) => {
+    // 更新空状态
+    empty.value = newList.length === 0;
 
-  // 计算总价
-  calculateTotalPrice();
+    // 计算总价
+    calculateTotalPrice();
 
-  // 更新全选状态
-  updateAllCheckedState();
-}, { deep: true });
+    // 更新全选状态
+    updateAllCheckedState();
+  },
+  { deep: true }
+);
 
 // ==========================================
 // 业务方法
@@ -199,30 +204,28 @@ watch(cartItemList, (newList) => {
  * 加载购物车数据
  */
 const loadData = async () => {
-
   // 检查用户是否登录
   if (!hasLogin.value) {
-    console.log('用户未登录，不加载购物车');
+    console.log("用户未登录，不加载购物车");
     empty.value = true;
     cartItemList.value = [];
     return;
   }
 
   try {
-
-    console.log('开始加载购物车数据...');
-    uni.showLoading({ title: '加载中...' });
+    console.log("开始加载购物车数据...");
+    uni.showLoading({ title: "加载中..." });
 
     // 调用API获取购物车列表
     const response = await getCart();
-    console.log('购物车原始数据:', response);
+    console.log("购物车原始数据:", response);
 
     // 处理数据，确保每个商品都有stock
-    cartItemList.value = (response || []).map(item => {
+    cartItemList.value = (response || []).map((item) => {
       console.log(`商品 ${item.skuName}:`, {
         count: item.count,
         stock: item.stock,
-        hasStock: item.stock != null
+        hasStock: item.stock != null,
       });
 
       // 确保有默认库存
@@ -230,7 +233,7 @@ const loadData = async () => {
         console.warn(`商品 ${item.skuName} 库存异常，设置为99`, item);
         return {
           ...item,
-          stock: 99
+          stock: 99,
         };
       }
 
@@ -241,17 +244,16 @@ const loadData = async () => {
     if (cartItemList.value.length === 0) {
       empty.value = true;
     }
-
   } catch (error) {
-    console.error('加载购物车失败:', error);
+    console.error("加载购物车失败:", error);
     uni.showToast({
-      title: '加载购物车失败',
-      icon: 'none'
+      title: "加载购物车失败",
+      icon: "none",
     });
 
     empty.value = true;
     cartItemList.value = [];
-  }finally {
+  } finally {
     uni.hideLoading();
   }
 };
@@ -263,7 +265,7 @@ const loadData = async () => {
  */
 const onImageLoad = (key, index) => {
   // 标记图片已加载
-  cartItemList.value[index].loaded = 'loaded';
+  cartItemList.value[index].loaded = "loaded";
 };
 
 /**
@@ -273,7 +275,7 @@ const onImageLoad = (key, index) => {
  */
 const onImageError = (key, index) => {
   // 设置错误图片
-  cartItemList.value[index].picUrl = '/static/errorImage.jpg';
+  cartItemList.value[index].picUrl = "/static/errorImage.jpg";
 };
 
 /**
@@ -282,34 +284,33 @@ const onImageError = (key, index) => {
  * @param {number} skuId - 商品SKU ID
  */
 const handleChangeCount = async (data, skuId) => {
-
   // 检查数量是否有效
   if (!data || !data.number || data.number < 1) {
     uni.showToast({
-      title: '数量不能小于1',
-      icon: 'none'
+      title: "数量不能小于1",
+      icon: "none",
     });
     return;
   }
 
   const newCount = data.number;
-  console.log('修改商品数量:', { skuId, newCount });
+  console.log("修改商品数量:", { skuId, newCount });
 
   // 1. 先更新本地显示，提升用户体验
-  const index = cartItemList.value.findIndex(item => item.skuId === skuId);
+  const index = cartItemList.value.findIndex((item) => item.skuId === skuId);
   if (index !== -1) {
-    cartItemList.value[index].count = newCount;  // ✅ 关键：立即更新本地数据
+    cartItemList.value[index].count = newCount; // ✅ 关键：立即更新本地数据
   }
 
   try {
-    uni.showLoading({ title: '更新中...' });
+    uni.showLoading({ title: "更新中..." });
 
     const cartItem = {
       skuId: skuId,
-      count: data.number
+      count: data.number,
     };
 
-    console.log('修改商品数量:', cartItem);
+    console.log("修改商品数量:", cartItem);
 
     // 调用API更新购物车
     await updateCartItem(skuId, cartItem);
@@ -318,18 +319,16 @@ const handleChangeCount = async (data, skuId) => {
     await loadData();
 
     uni.showToast({
-      title: '更新成功',
-      icon: 'success'
+      title: "更新成功",
+      icon: "success",
     });
-
-
   } catch (error) {
-    console.error('修改数量失败:', error);
+    console.error("修改数量失败:", error);
     uni.showToast({
-      title: '修改数量失败',
-      icon: 'none'
+      title: "修改数量失败",
+      icon: "none",
     });
-  }finally {
+  } finally {
     uni.hideLoading();
   }
 };
@@ -340,21 +339,19 @@ const handleChangeCount = async (data, skuId) => {
  * @param {number} skuId - 商品SKU ID
  */
 const handleCheckItem = async (index, skuId) => {
-
   if (index < 0 || index >= cartItemList.value.length) {
-    console.error('无效的商品索引:', index);
+    console.error("无效的商品索引:", index);
     return;
   }
 
   try {
-
     // 切换选中状态
     const newCheckedState = !cartItemList.value[index].checked;
-    console.log('修改商品选中状态:', { skuId, checked: newCheckedState });
+    console.log("修改商品选中状态:", { skuId, checked: newCheckedState });
 
     // 切换选中状态
     const params = {
-      checked: !cartItemList.value[index].checked
+      checked: !cartItemList.value[index].checked,
     };
 
     // 调用API更新选中状态
@@ -362,12 +359,11 @@ const handleCheckItem = async (index, skuId) => {
 
     // 刷新数据
     await loadData();
-
   } catch (error) {
-    console.error('修改选中状态失败:', error);
+    console.error("修改选中状态失败:", error);
     uni.showToast({
-      title: '操作失败',
-      icon: 'none'
+      title: "操作失败",
+      icon: "none",
     });
   }
 };
@@ -377,13 +373,12 @@ const handleCheckItem = async (index, skuId) => {
  */
 const handleCheckAll = async () => {
   try {
-
     const newCheckedState = !allChecked.value;
-    console.log('全选操作:', { checked: newCheckedState });
-    uni.showLoading({ title: '处理中...' });
+    console.log("全选操作:", { checked: newCheckedState });
+    uni.showLoading({ title: "处理中..." });
 
     const params = {
-      checked: !allChecked.value
+      checked: !allChecked.value,
     };
 
     // 调用API设置全选
@@ -393,18 +388,16 @@ const handleCheckAll = async () => {
     await loadData();
 
     uni.showToast({
-      title: newCheckedState ? '已全选' : '已取消全选',
-      icon: 'success'
+      title: newCheckedState ? "已全选" : "已取消全选",
+      icon: "success",
     });
-
-
   } catch (error) {
-    console.error('全选操作失败:', error);
+    console.error("全选操作失败:", error);
     uni.showToast({
-      title: '操作失败',
-      icon: 'none'
+      title: "操作失败",
+      icon: "none",
     });
-  }finally {
+  } finally {
     uni.hideLoading();
   }
 };
@@ -414,17 +407,17 @@ const handleCheckAll = async () => {
  * @param {number} skuId - 商品SKU ID
  */
 const removeCartItem_single = async (skuId) => {
-// 确认删除
+  // 确认删除
   uni.showModal({
-    title: '删除商品',
-    content: '确定要删除这个商品吗？',
-    confirmText: '删除',
-    confirmColor: '#e54d42',
+    title: "删除商品",
+    content: "确定要删除这个商品吗？",
+    confirmText: "删除",
+    confirmColor: "#e54d42",
     success: async (e) => {
       if (e.confirm) {
         try {
-          console.log('删除商品:', skuId);
-          uni.showLoading({ title: '删除中...' });
+          console.log("删除商品:", skuId);
+          uni.showLoading({ title: "删除中..." });
 
           // 调用API删除商品
           await removeCartItem(skuId);
@@ -433,21 +426,20 @@ const removeCartItem_single = async (skuId) => {
           await loadData();
 
           uni.showToast({
-            title: '删除成功',
-            icon: 'success'
+            title: "删除成功",
+            icon: "success",
           });
-
         } catch (error) {
-          console.error('删除失败:', error);
+          console.error("删除失败:", error);
           uni.showToast({
-            title: '删除失败',
-            icon: 'none'
+            title: "删除失败",
+            icon: "none",
           });
         } finally {
           uni.hideLoading();
         }
       }
-    }
+    },
   });
 };
 
@@ -455,25 +447,24 @@ const removeCartItem_single = async (skuId) => {
  * 清空购物车
  */
 const clearCart = () => {
-
   // 检查购物车是否为空
   if (cartItemList.value.length === 0) {
     uni.showToast({
-      title: '购物车已为空',
-      icon: 'none'
+      title: "购物车已为空",
+      icon: "none",
     });
     return;
   }
 
   uni.showModal({
-    title: '提示',
-    content: '确定要清空购物车吗？',
-    confirmText: '清空',
-    confirmColor: '#e54d42',
+    title: "提示",
+    content: "确定要清空购物车吗？",
+    confirmText: "清空",
+    confirmColor: "#e54d42",
     success: async (e) => {
       if (e.confirm) {
         try {
-          uni.showLoading({ title: '清空中...' });
+          uni.showLoading({ title: "清空中..." });
 
           // 调用API清空购物车
           await deleteCart();
@@ -482,21 +473,20 @@ const clearCart = () => {
           await loadData();
 
           uni.showToast({
-            title: '已清空',
-            icon: 'success'
+            title: "已清空",
+            icon: "success",
           });
-
         } catch (error) {
-          console.error('清空购物车失败:', error);
+          console.error("清空购物车失败:", error);
           uni.showToast({
-            title: '清空失败',
-            icon: 'none'
+            title: "清空失败",
+            icon: "none",
           });
         } finally {
           uni.hideLoading();
         }
       }
-    }
+    },
   });
 };
 
@@ -510,7 +500,7 @@ const calculateTotalPrice = () => {
   }
 
   // 筛选出选中的商品
-  const checkedItems = cartItemList.value.filter(item => item.checked);
+  const checkedItems = cartItemList.value.filter((item) => item.checked);
 
   if (checkedItems.length === 0) {
     totalPrice.value = 0;
@@ -519,7 +509,7 @@ const calculateTotalPrice = () => {
 
   // 计算总价：价格 × 数量
   let total = 0;
-  checkedItems.forEach(item => {
+  checkedItems.forEach((item) => {
     total += item.price * item.count;
   });
 
@@ -536,7 +526,7 @@ const updateAllCheckedState = () => {
   }
 
   // 检查是否所有商品都被选中
-  const allCheckedStatus = cartItemList.value.every(item => item.checked);
+  const allCheckedStatus = cartItemList.value.every((item) => item.checked);
   allChecked.value = allCheckedStatus;
 };
 
@@ -547,8 +537,8 @@ const handleCreateOrder = () => {
   // 检查是否有选中的商品
   if (!hasCheckedItem.value) {
     uni.showToast({
-      title: '请选择要结算的商品',
-      icon: 'none'
+      title: "请选择要结算的商品",
+      icon: "none",
     });
     return;
   }
@@ -556,8 +546,8 @@ const handleCreateOrder = () => {
   // 检查用户是否登录
   if (!hasLogin.value) {
     uni.showToast({
-      title: '请先登录',
-      icon: 'none'
+      title: "请先登录",
+      icon: "none",
     });
     navToLogin();
     return;
@@ -565,19 +555,19 @@ const handleCreateOrder = () => {
 
   // 获取选中的商品ID列表
   const selectedSkuIds = cartItemList.value
-    .filter(item => item.checked)
-    .map(item => item.skuId);
+    .filter((item) => item.checked)
+    .map((item) => item.skuId);
 
   // 跳转到订单创建页面
   uni.navigateTo({
-    url: `/packageD/pages/order/createOrder?skuIds=${selectedSkuIds.join(',')}`,
+    url: `/packageD/pages/order/createOrder?skuIds=${selectedSkuIds.join(",")}`,
     fail: (err) => {
-      console.error('跳转失败:', err);
+      console.error("跳转失败:", err);
       uni.showToast({
-        title: '跳转失败',
-        icon: 'none'
+        title: "跳转失败",
+        icon: "none",
       });
-    }
+    },
   });
 };
 
@@ -586,10 +576,10 @@ const handleCreateOrder = () => {
  */
 const navToLogin = () => {
   uni.navigateTo({
-    url: '/packageA/pages/login/login',
+    url: "/packageA/pages/login/login",
     fail: (err) => {
-      console.error('跳转到登录页失败:', err);
-    }
+      console.error("跳转到登录页失败:", err);
+    },
   });
 };
 
@@ -599,14 +589,14 @@ const navToLogin = () => {
  * @returns {string} 格式化后的金额
  */
 const formatMoney = (money) => {
-  if (!money && money !== 0) return '0.00';
+  if (!money && money !== 0) return "0.00";
   return (money / 100).toFixed(2);
 };
 </script>
 
 <style lang="scss">
 .container {
-  padding-bottom: 200upx;  /* 增加底部内边距，避免被底部栏遮挡 */
+  padding-bottom: 200upx; /* 增加底部内边距，避免被底部栏遮挡 */
 
   /* 空白页样式 */
   .empty {
@@ -728,16 +718,15 @@ const formatMoney = (money) => {
   z-index: 95;
   display: flex;
   align-items: center;
-  justify-content: space-between;  /* 改为两端对齐 */
+  justify-content: space-between; /* 改为两端对齐 */
 
   width: 690upx;
   height: 100upx;
-  padding: 0 20upx;  /* 减少内边距 */
+  padding: 0 20upx; /* 减少内边距 */
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 0 20upx 0 rgba(0, 0, 0, 0.5);
   border-radius: 16upx;
-  backdrop-filter: blur(20upx);  /* 毛玻璃效果 */
-
+  backdrop-filter: blur(20upx); /* 毛玻璃效果 */
 
   /* 全选区域 */
   .checkbox {
@@ -753,7 +742,6 @@ const formatMoney = (money) => {
       position: relative;
       z-index: 5;
       flex-shrink: 0; /* 防止图片被压缩 */
-
     }
 
     /* 清空按钮 */
@@ -765,7 +753,7 @@ const formatMoney = (money) => {
       z-index: 4;
       width: auto; /* 改为自动宽度 */
       height: 51px;
-      line-height: 51px; /* 行高等于高度，垂直居中 */  /*清空按钮文字不在正中间是因为padding: 0 20upx和line-height组合的问题*/
+      line-height: 51px; /* 行高等于高度，垂直居中 */ /*清空按钮文字不在正中间是因为padding: 0 20upx和line-height组合的问题*/
       padding: 0 20upx; /* 左右内边距 */
       font-size: $font-base;
       color: #fff;
