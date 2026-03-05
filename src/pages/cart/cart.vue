@@ -3,7 +3,7 @@
     <!-- 空白页：当用户未登录或购物车为空时显示 -->
     <view v-if="!hasLogin || empty === true" class="empty">
       <image
-        src="https://minio.aioveu.com/aioveu/aioveu-server/pages/cart/emptyCart.jpg"
+        src="https://cdn.aioveu.com/aioveu/aioveu-server/pages/cart/emptyCart.jpg"
         mode="aspectFit"
       ></image>
       <view v-if="hasLogin" class="empty-tips">
@@ -75,8 +75,8 @@
           <image
             :src="
               allChecked
-                ? 'https://minio.aioveu.com/aioveu/aioveu-server/pages/cart/selected.png'
-                : 'https://minio.aioveu.com/aioveu/aioveu-server/pages/cart/select.png'
+                ? 'https://cdn.aioveu.com/aioveu/aioveu-server/pages/cart/selected.png'
+                : 'https://cdn.aioveu.com/aioveu/aioveu-server/pages/cart/select.png'
             "
             mode="aspectFit"
             @click="handleCheckAll()"

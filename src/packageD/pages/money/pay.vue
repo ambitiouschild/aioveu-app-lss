@@ -2,9 +2,7 @@
   <!-- 支付页面主容器 -->
   <!-- 简洁的支付页面 -->
   <view class="app">
-
-
-<!--    完全可以不设计倒计时。在很多电商场景中，支付页面确实不需要倒计时，这完全取决于业务需求。
+    <!--    完全可以不设计倒计时。在很多电商场景中，支付页面确实不需要倒计时，这完全取决于业务需求。
     1. 实际业务场景
     很多电商平台（如淘宝、京东）的支付页面没有倒计时显示
     用户支付是主动行为，不需要时间压力
@@ -18,7 +16,7 @@
     避免定时器管理问题
     减少服务器压力（不需要频繁查询订单状态）-->
 
-<!--    4. 实际案例分析
+    <!--    4. 实际案例分析
     淘宝/天猫：支付页面无倒计时
     京东：部分场景有倒计时（如秒杀），普通订单无
     拼多多：支付页面简洁，无倒计时
@@ -62,7 +60,6 @@
       </view>
     </view>
 
-
     <view class="price-box">
       <text>支付金额</text>
       <text class="price">{{ formatPrice(paymentAmount) }}</text>
@@ -79,6 +76,18 @@
         </view>
         <label class="radio">
           <radio value="" color="#fa436a" :checked="payType === 'BALANCE'" />
+        </label>
+      </view>
+
+      <!-- 模拟支付选项 -->
+      <view class="type-item b-b" @click="changePayType('MOCK')">
+        <text class="icon yticon icon-weixinzhifu"></text>
+        <view class="con">
+          <text class="tit">模拟支付</text>
+          <text>测试模拟支付</text>
+        </view>
+        <label class="radio">
+          <radio value="" color="#fa436a" :checked="payType === 'MOCK'" />
         </label>
       </view>
 
@@ -112,7 +121,6 @@
 </template>
 
 <script setup>
-
 /*没有必要在支付页面再完整显示一遍订单信息
 1. 用户体验角度
 用户刚刚在订单确认页面已经仔细核对过商品、地址、金额等信息
@@ -125,49 +133,47 @@
 3. 实际业务场景
 用户已经确认订单 → 进入支付 → 选择支付方式 → 完成支付
 中间不需要再次确认所有订单细节*/
-import { ref, onMounted, computed } from 'vue';
-import { onLoad } from '@dcloudio/uni-app';
-import { pay } from '@/packageD/api/oms/order.ts';
-import { useUserStore } from '@/store';
+import { ref, onMounted, computed } from "vue";
+import { onLoad } from "@dcloudio/uni-app";
+import { pay } from "@/packageD/api/oms/order.ts";
+import { useUserStore } from "@/store";
 
 // 获取 Vuex store 实例
 const userStore = useUserStore();
 
 // 响应式数据定义
-const orderSn = ref('');         // 订单编号
+const orderSn = ref(""); // 订单编号
 // const appId = ref('');         // appid
-const payType = ref('BALANCE'); // 当前选中的支付方式
-const paymentAmount = ref(0);    // 支付金额
+const payType = ref("BALANCE"); // 当前选中的支付方式
+const paymentAmount = ref(0); // 支付金额
 
-const paying = ref(false);       // 支付中状态，防止重复点击
+const paying = ref(false); // 支付中状态，防止重复点击
 
-
-const imgalist = ref(['@/static/wxpay.png']); // 图片预览列表
+const imgalist = ref(["@/static/wxpay.png"]); // 图片预览列表
 
 // 计算属性：从 Vuex 获取用户余额
-const balance = computed(() => userStore.userInfo.balance /100);
+const balance = computed(() => userStore.userInfo.balance / 100);
 
 // 页面加载时执行
 onLoad((options) => {
-  console.log('========>> 进入支付页面, 参数：', options);
+  console.log("========>> 进入支付页面, 参数：", options);
 
   // 从页面参数中获取订单信息
-  orderSn.value = options.orderSn || '';
-// options.paymentAmount 是分（字符串 "13200"）
-  const amountInFen = parseFloat(options.paymentAmount) || 0;  // 13200
-  paymentAmount.value = amountInFen / 100;  // 转换为元：132.00
+  orderSn.value = options.orderSn || "";
+  // options.paymentAmount 是分（字符串 "13200"）
+  const amountInFen = parseFloat(options.paymentAmount) || 0; // 13200
+  paymentAmount.value = amountInFen / 100; // 转换为元：132.00
 
   // 从配置或 store 获取 appId
   // appId.value = uni.getStorageSync('appId') || '';
   // 或者从用户信息获取
   // appId.value = userStore.userInfo.appId || '';
 
-  console.log('支付页面加载完成:', {
+  console.log("支付页面加载完成:", {
     orderSn: orderSn.value,
     paymentAmount: paymentAmount.value,
-    balance: balance.value
+    balance: balance.value,
   });
-
 });
 
 /**
@@ -186,7 +192,7 @@ const changePayType = (type) => {
  */
 const formatPrice = (amount) => {
   if (isNaN(amount) || amount === null || amount === undefined) {
-    return '0.00';
+    return "0.00";
   }
   return Number(amount).toFixed(2);
 };
@@ -195,8 +201,6 @@ const formatPrice = (amount) => {
  * 处理支付操作
  */
 const handlePay = async () => {
-
-
   // 防止重复点击
   if (paying.value) {
     return;
@@ -204,23 +208,22 @@ const handlePay = async () => {
 
   paying.value = true;
 
+  console.info("======== 开始支付流程 ========");
+  console.log("页面显示金额（元）:", paymentAmount.value);
 
-  console.info('======== 开始支付流程 ========');
-  console.log('页面显示金额（元）:', paymentAmount.value);
-
-  console.log('支付参数:', {
+  console.log("支付参数:", {
     orderSn: orderSn.value,
     payType: payType.value,
     paymentAmount: paymentAmount.value,
-    balance: balance.value
+    balance: balance.value,
   });
 
   // 参数校验
   if (!orderSn.value) {
     uni.showToast({
-      title: '订单号不能为空',
-      icon: 'none',
-      duration: 2000
+      title: "订单号不能为空",
+      icon: "none",
+      duration: 2000,
     });
     paying.value = false;
     return;
@@ -228,9 +231,9 @@ const handlePay = async () => {
 
   if (paymentAmount.value <= 0) {
     uni.showToast({
-      title: '支付金额无效',
-      icon: 'none',
-      duration: 2000
+      title: "支付金额无效",
+      icon: "none",
+      duration: 2000,
     });
     paying.value = false;
     return;
@@ -246,14 +249,12 @@ const handlePay = async () => {
   //   return;
   // }
 
-
-
   // 检查余额支付是否足够
-  if (payType.value === 'BALANCE' && paymentAmount.value > balance.value) {
+  if (payType.value === "BALANCE" && paymentAmount.value > balance.value) {
     uni.showToast({
-      title: '余额不足，请选择其他支付方式',
-      icon: 'none',
-      duration: 2000
+      title: "余额不足，请选择其他支付方式",
+      icon: "none",
+      duration: 2000,
     });
     paying.value = false;
     return;
@@ -261,16 +262,14 @@ const handlePay = async () => {
 
   // 显示加载
   uni.showLoading({
-    title: '支付中...',
-    mask: true
+    title: "支付中...",
+    mask: true,
   });
 
-
   try {
-
     // 将页面显示的元转换为分
     const amountInFen = Math.round(paymentAmount.value * 100);
-    console.log('金额转换：页面显示=', paymentAmount.value, '元，后端需要=', amountInFen, '分');
+    console.log("金额转换：页面显示=", paymentAmount.value, "元，后端需要=", amountInFen, "分");
 
     // 调用支付接口
     const response = await pay({
@@ -280,71 +279,101 @@ const handlePay = async () => {
       paymentAmount: amountInFen, // 保持单位为分进行比较（推荐）
     });
 
+    console.log("【后端】返回前端调用第三方支付所需的支付参数", response);
+
+    if (response.code !== 0) {
+      throw new Error(response.message || "创建支付失败");
+    }
+    const paymentData = response.data;
+
+    payType.value = paymentData.payType;
+
+    // 4. 根据支付方式调用不同的支付接口
+    if (payType.value === "JSAPI") {
+      await handleJsapiPay(paymentData);
+    } else if (payType.value === "H5") {
+      await handleH5Pay(paymentData);
+    } else if (payType.value === "APP") {
+      await handleAppPay(paymentData);
+    } else {
+      throw new Error("不支持的支付方式");
+    }
+
     // 确保隐藏加载
     uni.hideLoading();
 
-    console.log('订单付款结果:', response);
+    console.log("订单付款结果:", response);
 
     // 支付成功提示
     uni.showToast({
-      title: '订单支付成功',
-      icon: 'success',
-      duration: 2000
+      title: "订单支付成功",
+      icon: "success",
+      duration: 2000,
     });
 
     // 跳转到支付成功页面
     setTimeout(() => {
       uni.redirectTo({
         //应该使用反引号 `而不是单引号 '来创建模板字符串
-        url: `/packageD/pages/money/paySuccess?orderSn=${orderSn.value}&amount=${paymentAmount.value}`
+        url: `/packageD/pages/money/paySuccess?orderSn=${orderSn.value}&amount=${paymentAmount.value}`,
       });
     }, 1500);
-
   } catch (error) {
-    console.error('支付失败:', error);
+    console.error("支付失败:", error);
 
     // 隐藏加载状态
     uni.hideLoading();
 
-// 提取错误信息
-    const errorDetail = error?.message || error?.msg || error?.toString() || '支付失败，请重试';
-    console.error('【支付】错误详情:', errorDetail);
+    // 提取错误信息
+    const errorDetail = error?.message || error?.msg || error?.toString() || "支付失败，请重试";
+    console.error("【支付】错误详情:", errorDetail);
 
     // 根据错误类型确定提示内容
-    let userMessage = '支付失败，请重试';
+    let userMessage = "支付失败，请重试";
     let needRetry = false;
     let needGoBack = false;
 
     // 错误分类处理
-    if (errorDetail.includes('configMap') || errorDetail.includes('配置') || errorDetail.includes('config')) {
-      userMessage = '支付配置异常，请联系客服';
-    } else if (errorDetail.includes('NullPointerException') || errorDetail.includes('空指针')) {
-      userMessage = '系统异常，请稍后重试';
+    if (
+      errorDetail.includes("configMap") ||
+      errorDetail.includes("配置") ||
+      errorDetail.includes("config")
+    ) {
+      userMessage = "支付配置异常，请联系客服";
+    } else if (errorDetail.includes("NullPointerException") || errorDetail.includes("空指针")) {
+      userMessage = "系统异常，请稍后重试";
       needRetry = true;
-    } else if (errorDetail.includes('微信支付') || errorDetail.includes('wxpay') || errorDetail.includes('WxPay')) {
-      userMessage = '微信支付服务异常，请稍后重试';
+    } else if (
+      errorDetail.includes("微信支付") ||
+      errorDetail.includes("wxpay") ||
+      errorDetail.includes("WxPay")
+    ) {
+      userMessage = "微信支付服务异常，请稍后重试";
       needRetry = true;
-    } else if (errorDetail.includes('库存不足') || errorDetail.includes('stock')) {
-      userMessage = '商品库存不足，请返回购物车重新选择';
+    } else if (errorDetail.includes("库存不足") || errorDetail.includes("stock")) {
+      userMessage = "商品库存不足，请返回购物车重新选择";
       needGoBack = true;
-    } else if (errorDetail.includes('重复支付') || errorDetail.includes('重复提交')) {
-      userMessage = '订单已支付，请勿重复操作';
-    } else if (errorDetail.includes('未登录') || errorDetail.includes('token') || errorDetail.includes('登录')) {
-      userMessage = '登录已过期，请重新登录';
+    } else if (errorDetail.includes("重复支付") || errorDetail.includes("重复提交")) {
+      userMessage = "订单已支付，请勿重复操作";
+    } else if (
+      errorDetail.includes("未登录") ||
+      errorDetail.includes("token") ||
+      errorDetail.includes("登录")
+    ) {
+      userMessage = "登录已过期，请重新登录";
     } else if (errorDetail.length < 30) {
       // 短错误信息直接显示
       userMessage = errorDetail;
     }
 
-
-// 显示错误提示
+    // 显示错误提示
     uni.showModal({
-      title: '支付失败',
+      title: "支付失败",
       content: userMessage,
       showCancel: needRetry, // 如果是可重试的错误，显示取消按钮
-      confirmText: needGoBack ? '返回购物车' : '确定',
-      cancelText: '重试支付',
-      confirmColor: '#fa436a',
+      confirmText: needGoBack ? "返回购物车" : "确定",
+      cancelText: "重试支付",
+      confirmColor: "#fa436a",
       success: (res) => {
         if (res.confirm) {
           if (needGoBack) {
@@ -358,11 +387,127 @@ const handlePay = async () => {
             handlePay(); // 重新调用支付方法
           }, 500);
         }
-      }
+      },
     });
   }
 };
 
+// 处理JSAPI支付（小程序/公众号）
+const handleJsapiPay = (paymentData) => {
+  return new Promise((resolve, reject) => {
+    console.log("【前端】调用微信支付JSAPI接口，参数:", paymentData);
+
+    // 解析支付参数
+    const payParams = JSON.parse(paymentData.paymentParams || "{}");
+
+    uni.requestPayment({
+      provider: "wxpay",
+      timeStamp: payParams.timeStamp || "",
+      nonceStr: payParams.nonceStr || "",
+      package: payParams.package || "",
+      signType: payParams.signType || "RSA",
+      paySign: payParams.paySign || "",
+
+      success: async (res) => {
+        console.log("【微信支付】支付成功，结果:", res);
+
+        // 支付成功，查询确认支付状态
+        const verified = await verifyPaymentStatus(paymentData.paymentNo);
+        if (verified) {
+          showPayResult(true, "支付成功", "订单支付成功");
+          resolve();
+        } else {
+          showPayResult(false, "支付异常", "支付状态验证失败，请联系客服");
+          reject(new Error("支付状态验证失败"));
+        }
+      },
+
+      fail: (err) => {
+        console.error("【微信支付】支付失败:", err);
+
+        // 判断支付取消还是失败
+        if (err.errMsg && err.errMsg.includes("cancel")) {
+          showPayResult(false, "支付取消", "您取消了支付");
+        } else {
+          showPayResult(false, "支付失败", err.errMsg || "支付失败，请重试");
+        }
+        reject(err);
+      },
+
+      complete: () => {
+        console.log("【微信支付】支付流程完成");
+      },
+    });
+  });
+};
+
+// 处理H5支付
+const handleH5Pay = (paymentData) => {
+  console.log("【H5支付】跳转到支付页面:", paymentData.h5Url);
+
+  // 跳转到微信H5支付页面
+  if (paymentData.h5Url) {
+    // #ifdef H5
+    window.location.href = paymentData.h5Url;
+    // #endif
+
+    // #ifndef H5
+    uni.navigateTo({
+      url: `/pages/webview/webview?url=${encodeURIComponent(paymentData.h5Url)}`,
+    });
+    // #endif
+  } else {
+    throw new Error("H5支付链接不存在");
+  }
+};
+
+// 处理APP支付
+const handleAppPay = (paymentData) => {
+  return new Promise((resolve, reject) => {
+    console.log("【APP支付】调用支付接口");
+
+    // 解析支付参数
+    const payParams = JSON.parse(paymentData.paymentParams || "{}");
+
+    // 调用APP支付
+    // 注意：APP支付需要在原生APP环境中调用
+    plus.payment.getChannels(
+      (channels) => {
+        const wxpay = channels.find((channel) => channel.id === "wxpay");
+        if (!wxpay) {
+          reject(new Error("未找到微信支付通道"));
+          return;
+        }
+
+        plus.payment.request(
+          wxpay,
+          {
+            appid: payParams.appid,
+            partnerid: payParams.partnerid,
+            prepayid: payParams.prepayid,
+            package: payParams.package,
+            noncestr: payParams.noncestr,
+            timestamp: payParams.timestamp,
+            sign: payParams.sign,
+          },
+          (result) => {
+            console.log("【APP支付】支付成功:", result);
+            showPayResult(true, "支付成功", "订单支付成功");
+            resolve();
+          },
+          (error) => {
+            console.error("【APP支付】支付失败:", error);
+            showPayResult(false, "支付失败", error.message || "支付失败");
+            reject(error);
+          }
+        );
+      },
+      (error) => {
+        reject(new Error("获取支付通道失败: " + error.message));
+      }
+    );
+  });
+};
 /**
  * 预览图片（功能已注释，保留代码结构）
  */
@@ -370,7 +515,7 @@ const previewImage = (e) => {
   const current = e.target.dataset.src;
   uni.previewImage({
     current: current,
-    urls: imgalist.value
+    urls: imgalist.value,
   });
 };
 </script>
@@ -382,7 +527,6 @@ const previewImage = (e) => {
   min-height: 100vh;
   background-color: #f5f5f5;
 }
-
 
 /* 支付状态栏 */
 .payment-header {
@@ -414,7 +558,6 @@ const previewImage = (e) => {
     }
   }
 }
-
 
 /* 信息摘要 */
 .info-summary {
@@ -472,7 +615,7 @@ const previewImage = (e) => {
 
     /* 价格前面的货币符号 */
     &:before {
-      content: '￥';
+      content: "￥";
       font-size: 40rpx;
     }
   }
@@ -497,7 +640,7 @@ const previewImage = (e) => {
 
     /* 底部边框分隔线 */
     &.b-b:after {
-      content: '';
+      content: "";
       position: absolute;
       left: 60rpx;
       right: 0;
@@ -530,7 +673,7 @@ const previewImage = (e) => {
   /* 支付方式标题 */
   .tit {
     font-size: 36rpx; /* 对应 $font-lg */
-    color: #303133;   /* 对应 $font-color-dark */
+    color: #303133; /* 对应 $font-color-dark */
     margin-bottom: 4rpx;
     font-weight: 500;
   }
@@ -542,7 +685,7 @@ const previewImage = (e) => {
     flex-direction: column;
     margin-left: 20rpx;
     font-size: 24rpx; /* 对应 $font-sm */
-    color: #909399;   /* 对应 $font-color-light */
+    color: #909399; /* 对应 $font-color-light */
   }
 
   /* 单选按钮容器 */

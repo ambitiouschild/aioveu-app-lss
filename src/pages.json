@@ -35,6 +35,12 @@
       "style": {
         "navigationBarTitleText": "我的"
       }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "商城登录"
+      }
     }
   ],
   "subPackages": [
@@ -693,4 +699,5 @@
       }
     ]
   }
+//  "entryPagePath": "pages/login/login"
 }

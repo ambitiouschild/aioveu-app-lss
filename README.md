@@ -24,7 +24,7 @@
 
 ## 项目介绍
 
-[aioveu-app](https://github.com/ambitiouschild/aioveu-app) 是基于 [vue3-element-admin](https://gitee.com/aioveuorg/vue3-element-admin) 升级的 Vue3 版本有来商城管理前端工程；使用前端主流技术栈 Vue3 + Vite4 + TypeScript5 + Vue Router + Pinia + Volar + Element Plus 等；实现功能包括不限于动态权限路由、按钮权限控制、国际化、主题大小切换等。
+[aioveu-app](https://github.com/ambitiouschild/aioveu-app) 是基于 [vue3-element-admin](https://gitee.com/aioveuorg/vue3-element-admin) 升级的 Vue3 版本可我不敌心动商城管理前端工程；使用前端主流技术栈 Vue3 + Vite4 + TypeScript5 + Vue Router + Pinia + Volar + Element Plus 等；实现功能包括不限于动态权限路由、按钮权限控制、国际化、主题大小切换等。
 
 ## 项目优势
 

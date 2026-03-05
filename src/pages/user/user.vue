@@ -3,7 +3,7 @@
     <view class="user-section">
       <image
         class="bg"
-        src="https://minio.aioveu.com/aioveu/aioveu-server/pages/user/user-bg2.png"
+        src="https://cdn.aioveu.com/aioveu/aioveu-server/pages/user/user-bg2.png"
       ></image>
       <view class="user-info-box">
         <view
@@ -13,7 +13,7 @@
           <image
             class="portrait"
             :src="
-              avatar || 'https://minio.aioveu.com/aioveu/aioveu-server/pages/user/missing-face.png'
+              avatar || 'https://cdn.aioveu.com/aioveu/aioveu-server/pages/user/missing-face.png'
             "
           ></image>
         </view>
@@ -26,9 +26,9 @@
         <view class="b-btn">立即开通</view>
         <view class="tit">
           <text class="yticon icon-iLinkapp-"></text>
-          可我不敌可爱会员
+          可我不敌可心动会员
         </view>
-        <text class="e-m">可我不敌可爱 Union</text>
+        <text class="e-m">可我不敌心动 Union</text>
         <text class="e-b">开通会员开发无bug 一测就上线</text>
       </view>
     </view>
@@ -47,7 +47,7 @@
     >
       <image
         class="arc"
-        src="https://minio.aioveu.com/aioveu/aioveu-server/pages/user/arc.png"
+        src="https://cdn.aioveu.com/aioveu/aioveu-server/pages/user/arc.png"
       ></image>
 
       <view class="tj-sction">
@@ -245,7 +245,7 @@ export default {
       if (userStore.userInfo) {
         return userStore.userInfo.nickName || userStore.userInfo.username || "用户";
       }
-      return "游客";
+      return "游客 请点击头像登录";
     },
 
     // nickname(){ return userStore.nickName},
@@ -262,7 +262,7 @@ export default {
         }
         return avatar;
       }
-      return "https://minio.aioveu.com/aioveu/aioveu-server/pages/user/missing-face.png";
+      return "https://cdn.aioveu.com/aioveu/aioveu-server/pages/user/missing-face.png";
     },
 
     // 用户ID

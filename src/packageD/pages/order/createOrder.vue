@@ -43,9 +43,9 @@
       <view class="g-header b-b">
         <image
           class="logo"
-          src="https://minio.aioveu.com/aioveu/aioveu-server/pages/order/logo.png"
+          src="https://cdn.aioveu.com/aioveu/aioveu-server/pages/order/logo.png"
         />
-        <text class="name">可我不敌可爱小店</text>
+        <text class="name">可我不敌心动小店</text>
       </view>
 
       <!-- 商品列表  ￥-->
