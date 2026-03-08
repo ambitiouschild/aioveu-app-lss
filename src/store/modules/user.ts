@@ -66,7 +66,7 @@ export const useUserStore = defineStore("user", () => {
     return new Promise((resolve, reject) => {
       AuthAPI.wechatLogin(code)
         .then((data) => {
-          // console.log("微信登录返回数据:", data);
+          console.log("微信登录返回数据:", data);
 
           // 设置 token
           const accessToken = data.access_token || data.accessToken;

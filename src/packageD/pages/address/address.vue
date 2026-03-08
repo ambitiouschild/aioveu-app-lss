@@ -10,10 +10,10 @@
       <view class="wrapper">
         <view class="address-box">
           <!-- 默认地址标签 -->
-          <text v-if="item.defaulted==1" class="tag">默认</text>
+          <text v-if="item.defaulted == 1" class="tag">默认</text>
           <!-- 详细地址 -->
           <text class="address">
-            {{ item.province }}{{item.city}}{{item.area}} {{ item.detailAddress }}
+            {{ item.province }}{{ item.city }}{{ item.area }} {{ item.detailAddress }}
           </text>
         </view>
         <!-- 联系人信息 -->
@@ -24,11 +24,8 @@
       </view>
       <!-- 编辑按钮 -->
 
-<!--      最可靠的方案是使用SVG图标，它不受字体加载问题影响，兼容性最好。-->
-      <text
-        class="yticon icon-bianji"
-        @click.stop="addAddress('edit', item)"
-      ></text>
+      <!--      最可靠的方案是使用SVG图标，它不受字体加载问题影响，兼容性最好。-->
+      <text class="yticon icon-bianji" @click.stop="addAddress('edit', item)"></text>
     </view>
 
     <!-- 新增地址按钮 -->
@@ -37,10 +34,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { onLoad, onShow } from '@dcloudio/uni-app';
-import { list } from '@/packageD/api/ums/address';
-import { useUserStore } from '@/store';
+import { ref, computed } from "vue";
+import { onLoad, onShow } from "@dcloudio/uni-app";
+import { list } from "@/packageD/api/ums/address";
+import { useUserStore } from "@/store";
 
 // 使用组合式API定义响应式数据
 const addressList = ref([]); // 地址列表数据
@@ -53,14 +50,14 @@ const userStore = useUserStore();
 const hasLogin = computed(() => userStore.hasLogin);
 
 // 计算属性：会员ID
-const memberId = computed(() => userStore.memberId);
+const memberId = computed(() => userStore.userId);
 
 /**
  * 页面加载生命周期
  * @param {Object} options - 页面参数
  */
 onLoad((options) => {
-  console.log('========>> 进入会员地址列表页面');
+  console.log("========>> 进入会员地址列表页面");
   // 从参数获取来源
   source.value = options.source || 0;
   getAddressList();
@@ -82,22 +79,24 @@ const getAddressList = async () => {
     // 检查是否已登录
     if (!hasLogin.value) {
       uni.showToast({
-        title: '请先登录',
-        icon: 'none'
+        title: "请先登录",
+        icon: "none",
       });
       return;
     }
 
+    console.log("会员ID", memberId.value);
+
     const response = await list(memberId.value);
 
-    console.log('获取会员地址', response);
+    console.log("获取会员地址", response);
 
     addressList.value = response;
   } catch (error) {
-    console.error('获取地址列表失败:', error);
+    console.error("获取地址列表失败:", error);
     uni.showToast({
-      title: '获取地址失败',
-      icon: 'none'
+      title: "获取地址失败",
+      icon: "none",
     });
   }
 };
@@ -128,24 +127,21 @@ const checkAddress = (item) => {
  * @param {Object} item - 地址对象（编辑时传递）
  */
 const addAddress = (type, item = null) => {
-
-
   let url = `/packageD/pages/address/addressManage?type=${type}`;
 
-  if (type === 'edit' && item) {
+  if (type === "edit" && item) {
     // 确保正确编码JSON数据
     url += `&data=${encodeURIComponent(JSON.stringify(item))}`;
   }
 
-  console.log('跳转到编辑地址管理页面地址数据:', item);
+  console.log("跳转到编辑地址管理页面地址数据:", item);
 
-  console.log('跳转到地址管理页面URL:', url);
+  console.log("跳转到地址管理页面URL:", url);
 
   // 跳转到地址管理页面
   uni.navigateTo({
-
     //微信小程序环境中不支持原生的 URLSearchParams对象
-    url: url
+    url: url,
   });
 };
 
@@ -159,7 +155,7 @@ const refreshList = () => {
 
 // 暴露方法，供子组件调用
 defineExpose({
-  refreshList
+  refreshList,
 });
 </script>
 
@@ -234,10 +230,10 @@ defineExpose({
 
 /* 在分包页面中重新定义字体 */
 @font-face {
-  font-family: 'yticon';
+  font-family: "yticon";
   font-weight: normal;
   font-style: normal;
-  src: url('https://at.alicdn.com/t/font_1078604_w4kpxh0rafi.ttf') format('truetype');
+  src: url("https://at.alicdn.com/t/font_1078604_w4kpxh0rafi.ttf") format("truetype");
 }
 
 /* 在分包页面中定义图标样式 */

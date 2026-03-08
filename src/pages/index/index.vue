@@ -7,50 +7,137 @@
     </view>
     <!-- #endif -->
 
-
     <!-- 头部轮播 -->
     <view class="carousel-section">
       <!-- 标题栏和状态栏占位符 -->
+<!--      脚本/内联加载，或设置了 no-referrer-->
       <view class="titleNview-placing"></view>
-      <swiper class="carousel" circular @change="swiperChange">
-        <swiper-item v-for="(item, index) in carouselList" :key="index" class="carousel-item"
-                     @click="navToDetailPage({title: item.title})">
-          <image :src="item.imageUrl" />   <!-- 这里用 imageUrl，不是 picUrl -->
+      <swiper class="carousel" circular @change="handleSwiperChange">
+        <swiper-item
+          v-for="(item, index) in carouselList"
+          :key="index"
+          class="carousel-item"
+          @click="navToDetailPage({ title: item.title })"
+        >
+          <image :src="item.imageUrl" />
+          <!-- 这里用 imageUrl，不是 picUrl -->
         </swiper-item>
       </swiper>
       <!-- 自定义swiper指示器 -->
       <view class="swiper-dots">
-        <text class="num">{{swiperCurrent+1}}</text>
+        <text class="num">{{ swiperCurrent + 1 }}</text>
         <text class="sign">/</text>
-        <text class="num">{{swiperLength}}</text>
-      </view>
-    </view>
-    <!-- 分类 -->
-    <view class="cate-section">
-      <view class="cate-item">
-        <image src="/static/temp/c3.png"></image>
-        <text>环球美食</text>
-      </view>
-      <view class="cate-item">
-        <image src="/static/temp/c5.png"></image>
-        <text>个护美妆</text>
-      </view>
-      <view class="cate-item">
-        <image src="/static/temp/c6.png"></image>
-        <text>营养保健</text>
-      </view>
-      <view class="cate-item">
-        <image src="/static/temp/c7.png"></image>
-        <text>家居厨卫</text>
-      </view>
-      <view class="cate-item">
-        <image src="/static/temp/c8.png"></image>
-        <text>速食生鲜</text>
+        <text class="num">{{ swiperLength }}</text>
       </view>
     </view>
 
-    <view class="ad-1">
-      <image src="/static/temp/ad1.jpg" mode="scaleToFill"></image>
+    <!-- ✅ 欢迎横幅放在轮播图下面 -->
+    <!--    <view class="welcome-banner">欢迎光临可我不敌心动商城</view>-->
+
+    <!-- 分类区域 - 改为动态数据 -->
+    <!--    iPhone 的 Safari 浏览器（以及大多数现代浏览器）在加载页面内嵌的图片时，会严格带上当前页面的 URL-->
+    <!--    作为 Referer，即 https://mall.aioveu.com。-->
+    <!--    电脑浏览器：可能在直接打开图片链接时，默认不发送 Referer（或者因为网络代理等原因 Referer 为空）。-->
+    <view v-if="categories.length > 0" class="cate-section">
+      <view
+        v-for="(item, index) in categories"
+        :key="index"
+        class="cate-item"
+        @click="handleCategoryClick(item)"
+      >
+        <image :src="item.homeIcon || defaultCateIcon" mode="aspectFill" />
+        <text>{{ item.homeName }}</text>
+      </view>
+    </view>
+
+    <!-- 分类 -->
+    <!--    <image src="/static/temp/c3.png"></image>-->
+    <!-- 如果后端没数据，显示默认分类 -->
+
+    <!-- 默认分类 -->
+    <view v-else class="cate-section">
+      <view
+        v-for="(item, index) in defaultCategories"
+        :key="index"
+        class="cate-item"
+        @click="navToCategory(item.id, item.name)"
+      >
+        <image :src="item.icon" mode="aspectFill" />
+        <text class="cate-name">{{ item.name }}</text>
+      </view>
+    </view>
+
+    <!-- ✅ 简约版欢迎语 -->
+    <view v-for="(advert, index) in adverts" :key="index" class="simple-welcome">
+      <text>🎉 {{ advert.homeAdvertName }}🎉</text>
+    </view>
+
+    <!-- 推荐：带图标的欢迎横幅 -->
+    <!--    <view class="welcome-card">-->
+    <!--      <view class="welcome-icon">🎁</view>-->
+    <!--      <view class="welcome-text">-->
+    <!--        <view class="main-text">欢迎光临 可我不敌心动商城</view>-->
+    <!--        <view class="sub-text">新人专享福利 · 全场心动</view>-->
+    <!--      </view>-->
+    <!--      <view class="welcome-tag">New</view>-->
+    <!--    </view>-->
+
+    <view class="welcome-card">
+      <view class="welcome-icon">🎁</view>
+      <view class="welcome-text">
+        <view v-for="(advert, index) in adverts" :key="index" class="main-text">
+          {{ advert.homeAdvertName }}
+        </view>
+        <view class="sub-text">新人专享福利 · 全场心动</view>
+      </view>
+      <view class="welcome-tag">New</view>
+    </view>
+
+    <!-- ✅ 新增：欢迎横幅 -->
+    <!--    <view class="welcome-banner">-->
+    <!--      <view class="welcome-content">-->
+    <!--        <text class="welcome-text">欢迎光临</text>-->
+    <!--        <text class="shop-name">可我不敌心动商城</text>-->
+    <!--        <view class="welcome-subtitle">精选好物 · 品质生活</view>-->
+    <!--      </view>-->
+    <!--      &lt;!&ndash; 装饰元素 &ndash;&gt;-->
+    <!--      <view class="decoration-left"></view>-->
+    <!--      <view class="decoration-right"></view>-->
+    <!--    </view>-->
+
+    <!-- 广告区域 - 改为动态数据 -->
+    <view v-if="adverts.length > 0" class="ad-1">
+      <view
+        v-for="(advert, index) in adverts"
+        :key="index"
+        class="ad-item"
+        @click="handleAdvertClick(advert)"
+      >
+        <image
+          :src="advert.homeAdvertIcon"
+          :mode="advert.imageMode || 'scaleToFill'"
+          :style="{ height: (advert.height || 210) + 'rpx' }"
+        />
+      </view>
+    </view>
+
+    <!-- 如果后端没数据，显示默认广告 -->
+    <!--    <view v-else class="ad-1">-->
+    <!--      <image src="" mode="scaleToFill"></image>-->
+    <!--    </view>-->
+    <view v-else class="ad-1">
+      <view
+        v-for="(advert, index) in defaultAdvert"
+        :key="index"
+        class="ad-item"
+        @click="handleAdvertClick(advert)"
+      >
+        <image
+          :src="advert.homeAdvertIcon"
+          :mode="advert.imageMode || 'scaleToFill'"
+          :style="{ height: (advert.height || 210) + 'rpx' }"
+        />
+      </view>
     </view>
 
     <!-- 秒杀楼层 -->
@@ -65,11 +152,15 @@
       </view>
       <scroll-view class="floor-list" scroll-x>
         <view class="scoll-wrapper">
-          <view v-for="(item, index) in goodsList" :key="index" class="floor-item"
-                @click="navToDetailPage(item.id)">
+          <view
+            v-for="(item, index) in goodsList"
+            :key="index"
+            class="floor-item"
+            @click="navToDetailPage(item.id)"
+          >
             <image :src="item.picUrl" mode="aspectFill"></image>
-            <text class="title clamp">{{item.name}}</text>
-            <text class="price">￥{{item.price/100}}</text>
+            <text class="title clamp">{{ item.name }}</text>
+            <text class="price">￥{{ item.price / 100 }}</text>
           </view>
         </view>
       </scroll-view>
@@ -84,9 +175,7 @@
       </view>
       <text class="yticon icon-you"></text>
     </view>
-    <view class="group-section">
-
-    </view>
+    <view class="group-section"></view>
     <!-- 分类推荐楼层 -->
     <view class="f-header m-t">
       <image src="/static/temp/h1.png"></image>
@@ -109,123 +198,270 @@
   </view>
 </template>
 
-<script>
+<script setup>
+// 这是使用 <script setup>语法的纯 Vue3 版本，没有使用 export default和 setup()函数。所有的响应式数据、计算属性和方法都在 <script setup>中直接声明，这是 Vue3 最简洁的写法。
+import { ref, onMounted } from "vue";
 import {
-  getAdvertList
-} from '@/api/sms/advert'
-import {
-  listSeckillingSpus
-} from '@/api/pms/goods'
+  onShareAppMessage,
+  onShareTimeline,
+  onNavigationBarSearchInputClicked,
+  onNavigationBarButtonTap,
+} from "@dcloudio/uni-app";
+import { getAdvertList } from "@/api/sms/advert";
+import { listSeckillingSpus } from "@/api/pms/goods";
+import SmsHomeAdvertAPI, { SmsHomeAdvertPageVO } from "@/api/sms/sms-home-advert";
+import SmsHomeCategoryAPI, { SmsHomeCategoryPageVO } from "@/api/sms/sms-home-category";
 
-export default {
+// 响应式数据
+//在 Vue 3 中，当你用 ref()或 reactive()包装数据时，Vue 会创建一个 Proxy 代理对象 来跟踪数据变化。
+// console.log("获取广告列表carouselList：{}",that.carouselList);
 
-  data() {
-    return {
-      swiperCurrent: 0,
-      swiperLength: 0,
-      carouselList: [],
-      goodsList: []
+const swiperCurrent = ref(0);
+const carouselList = ref([]);
+const swiperLength = ref([]);
+const goodsList = ref([]);
+const categories = ref([]);
+const adverts = ref([]);
+const loading = ref(false);
+
+const defaultCateIcon = "https://cdn.aioveu.com/aioveu/aioveu-server/avatar/avatar.png";
+
+// 默认分类数据
+const defaultCategories = ref([
+  { id: 1, name: "ClaudeCode", icon: defaultCateIcon },
+  { id: 2, name: "ChatGPT", icon: defaultCateIcon },
+  { id: 3, name: "Gemini", icon: defaultCateIcon },
+  { id: 4, name: "x", icon: defaultCateIcon },
+  { id: 5, name: "DeepSeek", icon: defaultCateIcon },
+]);
+
+// 默认广告数据
+const defaultAdvert = ref({
+  id: 1,
+  imageUrl:
+    "https://cdn.aioveu.com/aioveu/1001/image/20260304/2a8febb7ea0a43b7a865f708b65ae23f.png",
+  jumpPath: "/pages/product/list",
+  jumpType: "navigateTo",
+  height: 210,
+  imageMode: "scaleToFill",
+});
+
+// 生命周期
+// 页面显示时触发
+onMounted(() => {
+  console.log("首页页面加载");
+  loadData();
+});
+
+//在 uni-app 中，onPullDownRefresh是全局函数，直接从 uni-app框架中导入，不需要手动导入。
+// 下拉刷新 - 这是全局函数
+onPullDownRefresh(async () => {
+  console.log("下拉刷新触发");
+  await loadData(true);
+});
+
+// 分享功能
+onShareAppMessage(() => ({
+  title: "买东西~可我不敌心动小店",
+  path: "/pages/index/index",
+  imageUrl: "********",
+  success: (res) => {
+    console.log("分享成功", res);
+  },
+  fail: (err) => {
+    console.log("分享失败", err);
+  },
+}));
+
+onShareTimeline(() => ({
+  title: "买东西~可我不敌心动小店",
+  query: "key=value",
+  imageUrl: "********",
+  success: (res) => {
+    console.log("分享到朋友圈成功", res);
+  },
+  fail: (err) => {
+    console.log("分享到朋友圈失败", err);
+  },
+}));
+
+// 标题栏搜索点击
+onNavigationBarSearchInputClicked(async () => {
+  uni.$emit("showToast", { title: "点击了搜索框" });
+});
+
+// 标题栏按钮点击
+onNavigationBarButtonTap((e) => {
+  const index = e.index;
+  if (index === 0) {
+    uni.$emit("showToast", { title: "点击了扫描" });
+  } else if (index === 1) {
+    // #ifdef APP-PLUS
+    const pages = getCurrentPages();
+    const page = pages[pages.length - 1];
+    const currentWebview = page.$getAppWebview();
+    currentWebview.hideTitleNViewButtonRedDot({ index });
+    // #endif
+    uni.navigateTo({ url: "/pages/notice/notice" });
+  }
+});
+
+//轮播图切换修改背景色
+const handleSwiperChange = (e) => {
+  swiperCurrent.value = e.detail.current;
+};
+
+//导航至详情页面     //详情页
+const navToDetailPage = (id) => {
+  uni.navigateTo({
+    //测试数据没有写id，用title代替
+    url: `/pages/product/product?id=${id}`,
+  });
+};
+
+//导航至首页分类页面，产品分类的跳转
+const navToCategory = (id, name) => {
+  uni.navigateTo({
+    url: `/pages/category/category?id=${id}&name=${name}`,
+  });
+};
+
+//点击首页分类图标，产品分类外的展示，处理小程序内部跳转
+const handleCategoryClick = (item) => {
+  if (item.jumpPath) {
+    handleNavigation(item.jumpPath, item.jumpType, item.jumpParams);
+  } else {
+    navToCategory(item.id, item.name);
+  }
+};
+
+//点击首页广告图片，广告内容的展示，处理小程序内部跳转
+const handleAdvertClick = (advert) => {
+  if (advert.jumpPath) {
+    handleNavigation(advert.jumpPath, advert.jumpType, advert.jumpParams);
+  }
+};
+
+//处理小程序内部跳转
+const handleNavigation = (path, type = "navigateTo", params = {}) => {
+  if (!path) return;
+
+  if (path.startsWith("/")) {
+    const query = buildQueryString(params);
+    const url = query ? `${path}?${query}` : path;
+
+    const navigationMethods = {
+      navigateTo: uni.navigateTo,
+      redirectTo: uni.redirectTo,
+      switchTab: uni.switchTab,
+      reLaunch: uni.reLaunch,
     };
-  },
 
-  onShow() {
-    this.loadData();
-  },
-  methods: {
-    /**
-     * 请求静态数据只是为了代码不那么乱
-     * 分次请求未作整合
-     */
-    async loadData() {
-      const that = this
-      getAdvertList().then(response => {
-        const data = response
+    const method = navigationMethods[type] || uni.navigateTo;
+    method({ url });
+  } else if (path.startsWith("http")) {
+    // #ifdef H5
+    window.location.href = path;
+    // #endif
+    // #ifndef H5
+    uni.navigateTo({
+      url: `/pages/webview/webview?url=${encodeURIComponent(path)}`,
+    });
+    // #endif
+  }
+};
 
-        console.log("获取广告列表data：{}",data);
+// 数据加载
+const loadData = async (isRefresh = false) => {
+  try {
+    loading.value = true;
 
-        if (data) {
-          that.swiperLength = data.length
-          that.carouselList = data
-
-          //在 Vue 3 中，当你用 ref()或 reactive()包装数据时，Vue 会创建一个 Proxy 代理对象 来跟踪数据变化。
-          // console.log("获取广告列表carouselList：{}",that.carouselList);
-        }
-      })
-
-
-
-      listSeckillingSpus().then(response => {
-
-        console.log("获取秒杀商品列表data：{}",response);
-
-        that.goodsList = response || [];
-      })
-    },
-    onShareAppMessage() {
-      return {
-        title: '买东西~就来有来小店',
-        path: '/pages/index/index',
-        imageUrl: '********',
-        success: function(res) {
-          console.log('分享成功', res);
-        },
-        fail: function(err) {
-          console.log('分享失败', err);
-        }
-      };
-    },
-    onShareTimeline() {
-      return {
-        title: '买东西~就来有来小店',
-        query: 'key=value',
-        imageUrl: '********',
-        success: function(res) {
-          console.log('分享到朋友圈成功', res);
-        },
-        fail: function(err) {
-          console.log('分享到朋友圈失败', err);
-        }
-      };
-    },
-    //轮播图切换修改背景色
-    swiperChange(e) {
-      const index = e.detail.current;
-      this.swiperCurrent = index;
-    },
-    //详情页
-    navToDetailPage(id) {
-      //测试数据没有写id，用title代替
-      uni.navigateTo({
-        url: `/pages/product/product?id=${id}`
-      })
-    },
-  },
-  // #ifndef MP
-  // 标题栏input搜索框点击
-  onNavigationBarSearchInputClicked: async function(e) {
-    this.$api.msg('点击了搜索框');
-  },
-  //点击导航栏 buttons 时触发
-  onNavigationBarButtonTap(e) {
-    const index = e.index;
-    if (index === 0) {
-      this.$api.msg('点击了扫描');
-    } else if (index === 1) {
-      // #ifdef APP-PLUS
-      const pages = getCurrentPages();
-      const page = pages[pages.length - 1];
-      const currentWebview = page.$getAppWebview();
-      currentWebview.hideTitleNViewButtonRedDot({
-        index
-      });
-      // #endif
-      uni.navigateTo({
-        url: '/pages/notice/notice'
-      })
+    await Promise.all([
+      loadCarouselData(),
+      loadCategoriesData(),
+      loadAdvertsData(),
+      loadGoodsData(),
+    ]);
+  } catch (error) {
+    console.error("加载首页数据失败:", error);
+    uni.showToast({
+      title: "加载失败",
+      icon: "none",
+    });
+  } finally {
+    loading.value = false;
+    if (isRefresh) {
+      uni.stopPullDownRefresh();
     }
   }
-  // #endif
-}
+};
+
+//获取轮播图广告列表
+const loadCarouselData = async () => {
+  try {
+    const response = await getAdvertList();
+    console.log("获取轮播图广告列表:", response);
+
+    if (response && Array.isArray(response)) {
+      carouselList.value = response;
+      swiperLength.value = response.length;
+    }
+  } catch (error) {
+    console.error("加载轮播图数据失败:", error);
+    carouselList.value = getDefaultCarouselData();
+  }
+};
+
+const loadCategoriesData = async () => {
+  try {
+    const response = await SmsHomeCategoryAPI.getPage();
+    console.log("获取分类列表:", response);
+
+    if (response) {
+      categories.value = response;
+      console.log("================");
+    } else {
+      categories.value = [];
+    }
+  } catch (error) {
+    console.error("加载分类数据失败:", error);
+    categories.value = [];
+  }
+};
+
+const loadAdvertsData = async () => {
+  try {
+    const response = await SmsHomeAdvertAPI.getPage();
+    console.log("获取广告列表:", response);
+
+    if (response) {
+      adverts.value = response;
+    } else {
+      adverts.value = [];
+    }
+  } catch (error) {
+    console.error("加载广告数据失败:", error);
+    adverts.value = [];
+  }
+};
+
+const loadGoodsData = async () => {
+  try {
+    const response = await listSeckillingSpus();
+    console.log("获取秒杀商品列表:", response);
+    goodsList.value = response || [];
+  } catch (error) {
+    console.error("加载商品数据失败:", error);
+    goodsList.value = [];
+  }
+};
+
+// 默认数据
+const getDefaultCarouselData = () => [
+  { imageUrl: "/static/temp/b1.jpg", title: "广告1" },
+  { imageUrl: "/static/temp/b2.jpg", title: "广告2" },
+  { imageUrl: "/static/temp/b3.jpg", title: "广告3" },
+];
 </script>
 
 <style lang="scss">
@@ -246,7 +482,7 @@ export default {
     font-size: 28upx;
     color: $font-color-base;
     border-radius: 20px;
-    background: rgba(255, 255, 255, .6);
+    background: rgba(255, 255, 255, 0.6);
   }
 }
 
@@ -281,7 +517,6 @@ page {
 
 /* #endif */
 
-
 page {
   background: #f5f5f5;
 }
@@ -307,13 +542,13 @@ page {
     left: 0;
     width: 100%;
     height: 426upx;
-    transition: .4s;
+    transition: 0.4s;
   }
 }
 
 .carousel {
   width: 100%;
-  height: 500upx;   /* 修改这个值 */
+  height: 500upx; /* 修改这个值 */
 
   .carousel-item {
     width: 100%;
@@ -361,6 +596,7 @@ page {
 }
 
 /* 分类 */
+/* 分类 - 增强版 */
 .cate-section {
   display: flex;
   justify-content: space-around;
@@ -368,13 +604,36 @@ page {
   flex-wrap: wrap;
   padding: 30upx 22upx;
   background: #fff;
+  /*新增*/
+  border-bottom: 1rpx solid #f0f0f0;
 
   .cate-item {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 20%; /* 平均分布5个 */ /*新增*/
+
     font-size: $font-sm + 1px;
     color: $font-color-dark;
+
+    /* 点击效果 */
+    &:active {
+      opacity: 0.8;
+      transform: scale(0.95);
+      transition: all 0.2s;
+    }
+
+    .cate-name {
+      font-size: 24rpx;
+      color: #333333;
+      margin-top: 8rpx;
+      text-align: center;
+      line-height: 1.4;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   /* 原图标颜色太深,不想改图了,所以加了透明度 */
@@ -383,11 +642,187 @@ page {
     height: 88upx;
     margin-bottom: 14upx;
     border-radius: 50%;
-    opacity: .7;
-    box-shadow: 4upx 4upx 20upx rgba(250, 67, 106, 0.3);
+    box-shadow: 4rpx 4rpx 20rpx rgba(250, 67, 106, 0.3);
+    border: 2rpx solid #fff; /* 白色边框，让图标更清晰 */ /*新增*/
+
+    /* 确保图片完全显示 */
+    object-fit: cover;
+
+    opacity: 1; /* ✅ 改为不透明 1 ,加了透明度0.7 */
+    /*方案2：完全移除透明度设置*/
+    /* 移除 opacity 属性 */
+
+    /* 使用 filter 替代 opacity，效果更好 */
+    /* filter: brightness(1.1) contrast(1.1); */ /* 稍微提亮和增强对比度 */
+
+    /* 悬停效果 */
+    &:hover {
+      box-shadow: 0rpx 8rpx 25rpx rgba(250, 67, 106, 0.4);
+    }
   }
 }
 
+/* 简约版  位置4：简约版本*/
+.simple-welcome {
+  background: #fff;
+  padding: 30rpx 0;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
+  border-top: 1px solid #f0f0f0;
+  margin: 20rpx 0;
+}
+
+/* 卡片式欢迎横幅 🎨 推荐版本（带图标） */
+.welcome-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  padding: 30rpx;
+  margin: 20rpx 0;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+
+  &:before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 8rpx;
+    height: 100%;
+    background: linear-gradient(to bottom, #667eea, #764ba2);
+  }
+
+  .welcome-icon {
+    font-size: 48rpx;
+    margin-right: 24rpx;
+  }
+
+  .welcome-text {
+    flex: 1;
+
+    .main-text {
+      font-size: 32rpx;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 8rpx;
+    }
+
+    .sub-text {
+      font-size: 24rpx;
+      color: #666;
+    }
+  }
+
+  .welcome-tag {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    padding: 8rpx 16rpx;
+    border-radius: 20rpx;
+    font-size: 20rpx;
+    font-weight: bold;
+  }
+}
+
+/* 欢迎横幅  渐变背景的欢迎横幅） 符合现代电商设计趋势 */
+.welcome-banner {
+  position: relative;
+  width: 100%;
+  height: 180rpx;
+  margin: 20rpx 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20rpx;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10rpx 30rpx rgba(102, 126, 234, 0.3);
+
+  .welcome-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: #fff;
+
+    .welcome-text {
+      display: block;
+      font-size: 32rpx;
+      font-weight: 300;
+      margin-bottom: 8rpx;
+      opacity: 0.9;
+    }
+
+    .shop-name {
+      display: block;
+      font-size: 48rpx;
+      font-weight: bold;
+      margin-bottom: 12rpx;
+      letter-spacing: 2rpx;
+      text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.2);
+    }
+
+    .welcome-subtitle {
+      font-size: 24rpx;
+      opacity: 0.8;
+      letter-spacing: 4rpx;
+    }
+  }
+
+  /* 装饰元素 */
+  .decoration-left,
+  .decoration-right {
+    position: absolute;
+    width: 120rpx;
+    height: 120rpx;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .decoration-left {
+    top: -40rpx;
+    left: -40rpx;
+  }
+
+  .decoration-right {
+    bottom: -40rpx;
+    right: -40rpx;
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .welcome-banner {
+    height: 160rpx;
+    margin: 15rpx 0;
+
+    .welcome-content {
+      .welcome-text {
+        font-size: 28rpx;
+      }
+
+      .shop-name {
+        font-size: 40rpx;
+      }
+
+      .welcome-subtitle {
+        font-size: 20rpx;
+        letter-spacing: 2rpx;
+      }
+    }
+  }
+}
+
+/*你的广告图比例：
+
+比例：约 3.57:1 (750:210)
+
+分辨率建议：750×210 像素
+
+*/
 .ad-1 {
   width: 100%;
   height: 210upx;
@@ -432,7 +867,7 @@ page {
       font-size: $font-sm + 1px;
       color: #fff;
       border-radius: 2px;
-      background: rgba(0, 0, 0, .8);
+      background: rgba(0, 0, 0, 0.8);
     }
 
     .icon-you {
@@ -601,13 +1036,13 @@ page {
     position: relative;
 
     &:after {
-      content: '';
+      content: "";
       position: absolute;
       left: 0;
       top: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(rgba(255, 255, 255, .06) 30%, #f8f8f8);
+      background: linear-gradient(rgba(255, 255, 255, 0.06) 30%, #f8f8f8);
     }
   }
 
@@ -624,7 +1059,7 @@ page {
     margin-top: -140upx;
     margin-left: 30upx;
     background: #fff;
-    box-shadow: 1px 1px 5px rgba(0, 0, 0, .2);
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
     position: relative;
     z-index: 1;
   }
@@ -684,7 +1119,7 @@ page {
     width: 48%;
     padding-bottom: 40upx;
 
-    &:nth-child(2n+1) {
+    &:nth-child(2n + 1) {
       margin-right: 4%;
     }
   }
