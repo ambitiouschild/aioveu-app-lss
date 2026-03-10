@@ -19,7 +19,7 @@ export const useUserStore = defineStore("user", () => {
   const hasLogin = computed(() => !!token.value);
 
   // Getters
-  const userId = computed(() => userInfo.value?.userId || null);
+  const userId = computed(() => userInfo.value?.id || null);
   const nickName = computed(() => userInfo.value?.nickName || '');
   const username = computed(() => userInfo.value?.username || userInfo.value?.nickName || '');
   const avatar = computed(() => userInfo.value?.avatarUrl || '');
@@ -200,7 +200,7 @@ export const useUserStore = defineStore("user", () => {
         .then((data) => {
 
 
-          // console.log("获取用户信息成功:", data);
+          console.log("获取用户信息成功:", data);
 
           // 处理权限数据
           if (data.perms || data.perms) {

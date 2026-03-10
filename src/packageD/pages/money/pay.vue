@@ -136,6 +136,7 @@
 import { ref, onMounted, computed } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { pay } from "@/packageD/api/oms/order.ts";
+import PayAPI from "@/packageD/api/pay/pay.ts";
 import { useUserStore } from "@/store";
 
 // 获取 Vuex store 实例
@@ -199,6 +200,8 @@ const formatPrice = (amount) => {
 
 /**
  * 处理支付操作
+ * 统一支付成功处理：只在 handlePay中显示提示和跳转
+ * 清晰的错误处理：每个步骤都有明确的错误处理
  */
 const handlePay = async () => {
   // 防止重复点击
@@ -211,12 +214,12 @@ const handlePay = async () => {
   console.info("======== 开始支付流程 ========");
   console.log("页面显示金额（元）:", paymentAmount.value);
 
-  console.log("支付参数:", {
-    orderSn: orderSn.value,
-    payType: payType.value,
-    paymentAmount: paymentAmount.value,
-    balance: balance.value,
-  });
+  // console.log("支付参数:", {
+  //   orderSn: orderSn.value,
+  //   payType: payType.value,
+  //   paymentAmount: paymentAmount.value,
+  //   balance: balance.value,
+  // });
 
   // 参数校验
   if (!orderSn.value) {
@@ -281,43 +284,52 @@ const handlePay = async () => {
 
     console.log("【后端】返回前端调用第三方支付所需的支付参数", response);
 
-    if (response.code !== 0) {
+    if (response.code !== "00000") {
       throw new Error(response.message || "创建支付失败");
     }
     const paymentData = response.data;
 
     payType.value = paymentData.payType;
 
+    // 2. 调用具体的支付方式
+    let payResult = null;
+
     // 4. 根据支付方式调用不同的支付接口
     if (payType.value === "JSAPI") {
-      await handleJsapiPay(paymentData);
+      payResult = await handleJsapiPay(paymentData);
     } else if (payType.value === "H5") {
-      await handleH5Pay(paymentData);
+      payResult = await handleH5Pay(paymentData);
     } else if (payType.value === "APP") {
-      await handleAppPay(paymentData);
+      payResult = await handleAppPay(paymentData);
     } else {
       throw new Error("不支持的支付方式");
     }
 
     // 确保隐藏加载
     uni.hideLoading();
+    if (payResult && payResult.success) {
+      console.log("✅ 支付流程全部完成，准备跳转");
 
-    console.log("订单付款结果:", response);
-
-    // 支付成功提示
-    uni.showToast({
-      title: "订单支付成功",
-      icon: "success",
-      duration: 2000,
-    });
-
-    // 跳转到支付成功页面
-    setTimeout(() => {
-      uni.redirectTo({
-        //应该使用反引号 `而不是单引号 '来创建模板字符串
-        url: `/packageD/pages/money/paySuccess?orderSn=${orderSn.value}&amount=${paymentAmount.value}`,
+      // ✅ 统一处理支付成功
+      // 支付成功提示
+      uni.showToast({
+        title: "订单支付成功",
+        icon: "success",
+        duration: 2000,
       });
-    }, 1500);
+
+      // 跳转到支付成功页面
+      setTimeout(() => {
+        uni.redirectTo({
+          //应该使用反引号 `而不是单引号 '来创建模板字符串
+          url: `/packageD/pages/money/paySuccess?orderSn=${orderSn.value}&amount=${paymentAmount.value}`,
+        });
+      }, 1500);
+    } else {
+      throw new Error("支付结果异常");
+    }
+
+    // console.log("订单付款结果:", response);
   } catch (error) {
     console.error("支付失败:", error);
 
@@ -389,36 +401,95 @@ const handlePay = async () => {
         }
       },
     });
+  } finally {
+    paying.value = false; //防止重复点击
   }
 };
 
+//修改 handleJsapiPay返回值：返回结构化结果
 // 处理JSAPI支付（小程序/公众号）
 const handleJsapiPay = (paymentData) => {
   return new Promise((resolve, reject) => {
     console.log("【前端】调用微信支付JSAPI接口，参数:", paymentData);
 
-    // 解析支付参数
-    const payParams = JSON.parse(paymentData.paymentParams || "{}");
+    // 改为：
+    let paymentParams = {};
 
+    // 先打印看看数据结构
+    console.log("【微信支付】paymentData:", paymentData);
+    console.log("【微信支付】paymentData.paymentParams:", paymentData.payParams);
+    console.log("【微信支付】paymentData.paymentParams 类型:", typeof paymentData.payParams);
+
+    if (typeof paymentData.payParams === "string") {
+      // 如果是字符串，尝试解析 JSON
+      try {
+        paymentParams = JSON.parse(paymentData.payParams);
+        console.log("【微信支付】从字符串解析 paymentParams:", paymentParams);
+      } catch (e) {
+        console.error("❌ 解析 JSON 字符串失败:", e);
+        uni.showToast({
+          title: "支付参数错误",
+          icon: "none",
+        });
+        reject(new Error("解析支付参数失败" + parseError.message));
+        return;
+      }
+    } else if (typeof paymentData.payParams === "object" && paymentData.payParams !== null) {
+      // 如果已经是对象，直接使用
+      paymentParams = paymentData.payParams;
+      console.log("【微信支付】直接使用对象 paymentParams:", paymentParams);
+    } else {
+      console.error("❌ paymentParams 格式不支持:", typeof paymentData.payParams);
+      uni.showToast({
+        title: "支付参数格式错误",
+        icon: "none",
+      });
+      reject(new Error("paymentParams 格式不支持"));
+      return;
+    }
+    console.log("【微信支付】解析后的 paymentParams:", paymentParams);
+
+    // 调用微信支付
     uni.requestPayment({
       provider: "wxpay",
-      timeStamp: payParams.timeStamp || "",
-      nonceStr: payParams.nonceStr || "",
-      package: payParams.package || "",
-      signType: payParams.signType || "RSA",
-      paySign: payParams.paySign || "",
+      timeStamp: paymentParams.timeStamp || "",
+      nonceStr: paymentParams.nonceStr || "",
+      package: paymentParams.package || "",
+      signType: paymentParams.signType || "RSA",
+      paySign: paymentParams.paySign || "",
 
       success: async (res) => {
         console.log("【微信支付】支付成功，结果:", res);
 
-        // 支付成功，查询确认支付状态
-        const verified = await verifyPaymentStatus(paymentData.paymentNo);
-        if (verified) {
-          showPayResult(true, "支付成功", "订单支付成功");
-          resolve();
-        } else {
-          showPayResult(false, "支付异常", "支付状态验证失败，请联系客服");
-          reject(new Error("支付状态验证失败"));
+        try {
+          // 支付成功，查询确认支付状态
+          const PaymentStatusVO = await PayAPI.verifyPaymentStatus(paymentData.paymentNo);
+          console.log("【支付验证】结果:", PaymentStatusVO);
+          const verified = PaymentStatusVO.paymentStatus;
+
+          if (verified && verified === 2) {
+            // 支付验证成功
+            resolve({
+              success: true,
+              data: {
+                orderSn: orderSn.value,
+                amount: paymentAmount.value,
+                paymentNo: paymentData.paymentNo,
+              },
+            });
+          } else {
+            // 支付验证失败
+            uni.showModal({
+              title: "支付异常",
+              content: "支付状态验证失败，请联系客服",
+              showCancel: false,
+              confirmText: "我知道了",
+            });
+            reject(new Error("支付状态验证失败"));
+          }
+        } catch (verifyError) {
+          console.error("验证支付状态失败:", verifyError);
+          reject(verifyError);
         }
       },
 
@@ -427,12 +498,22 @@ const handleJsapiPay = (paymentData) => {
 
         // 判断支付取消还是失败
         if (err.errMsg && err.errMsg.includes("cancel")) {
-          showPayResult(false, "支付取消", "您取消了支付");
+          uni.showToast({
+            title: "支付已取消",
+            icon: "none",
+          });
         } else {
-          showPayResult(false, "支付失败", err.errMsg || "支付失败，请重试");
+          uni.showModal({
+            title: "支付失败",
+            content: err.errMsg || "支付失败，请重试",
+            showCancel: false,
+          });
         }
         reject(err);
       },
+
+      //移除 showPayResult函数：不再需要，统一在 handlePay中处理
+      //修改 handleJsapiPay返回值：返回结构化结果
 
       complete: () => {
         console.log("【微信支付】支付流程完成");
