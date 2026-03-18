@@ -68,28 +68,28 @@
     <!-- 支付方式选择列表 -->
     <view class="pay-type-list">
       <!-- 预存款支付选项 -->
-      <view class="type-item" @click="changePayType('BALANCE')">
-        <text class="icon yticon icon-erjiye-yucunkuan"></text>
-        <view class="con">
-          <text class="tit">预存款支付</text>
-          <text>可用余额 ¥{{ formatPrice(balance) }}</text>
-        </view>
-        <label class="radio">
-          <radio value="" color="#fa436a" :checked="payType === 'BALANCE'" />
-        </label>
-      </view>
+<!--      <view class="type-item" @click="changePayType('BALANCE')">-->
+<!--        <text class="icon yticon icon-erjiye-yucunkuan"></text>-->
+<!--        <view class="con">-->
+<!--          <text class="tit">预存款支付</text>-->
+<!--          <text>可用余额 ¥{{ formatPrice(balance) }}</text>-->
+<!--        </view>-->
+<!--        <label class="radio">-->
+<!--          <radio value="" color="#fa436a" :checked="payType === 'BALANCE'" />-->
+<!--        </label>-->
+<!--      </view>-->
 
       <!-- 模拟支付选项 -->
-      <view class="type-item b-b" @click="changePayType('MOCK')">
-        <text class="icon yticon icon-weixinzhifu"></text>
-        <view class="con">
-          <text class="tit">模拟支付</text>
-          <text>测试模拟支付</text>
-        </view>
-        <label class="radio">
-          <radio value="" color="#fa436a" :checked="payType === 'MOCK'" />
-        </label>
-      </view>
+<!--      <view class="type-item b-b" @click="changePayType('MOCK')">-->
+<!--        <text class="icon yticon icon-weixinzhifu"></text>-->
+<!--        <view class="con">-->
+<!--          <text class="tit">模拟支付</text>-->
+<!--          <text>测试模拟支付</text>-->
+<!--        </view>-->
+<!--        <label class="radio">-->
+<!--          <radio value="" color="#fa436a" :checked="payType === 'MOCK'" />-->
+<!--        </label>-->
+<!--      </view>-->
 
       <!-- 微信支付选项 -->
       <view class="type-item b-b" @click="changePayType('WX_JSAPI')">
@@ -104,15 +104,16 @@
       </view>
 
       <!-- 支付宝支付选项 -->
-      <view class="type-item b-b" @click="changePayType('ALIPAY')">
-        <text class="icon yticon icon-alipay"></text>
-        <view class="con">
-          <text class="tit">支付宝支付</text>
-        </view>
-        <label class="radio">
-          <radio value="" color="#fa436a" :checked="payType === 'ALIPAY'" />
-        </label>
-      </view>
+<!--      <view class="type-item b-b" @click="changePayType('ALIPAY')">-->
+<!--        <text class="icon yticon icon-alipay"></text>-->
+<!--        <view class="con">-->
+<!--          <text class="tit">支付宝支付</text>-->
+<!--        </view>-->
+<!--        <label class="radio">-->
+<!--          <radio value="" color="#fa436a" :checked="payType === 'ALIPAY'" />-->
+<!--        </label>-->
+<!--      </view>-->
+
     </view>
 
     <!-- 确认支付按钮 -->

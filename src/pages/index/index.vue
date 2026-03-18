@@ -10,7 +10,7 @@
     <!-- 头部轮播 -->
     <view class="carousel-section">
       <!-- 标题栏和状态栏占位符 -->
-<!--      脚本/内联加载，或设置了 no-referrer-->
+      <!--      脚本/内联加载，或设置了 no-referrer-->
       <view class="titleNview-placing"></view>
       <swiper class="carousel" circular @change="handleSwiperChange">
         <swiper-item
@@ -262,9 +262,9 @@ onPullDownRefresh(async () => {
 
 // 分享功能
 onShareAppMessage(() => ({
-  title: "买东西~可我不敌心动小店",
+  title: "买东西~可我不敌心动",
   path: "/pages/index/index",
-  imageUrl: "********",
+  imageUrl: "https://cdn.aioveu.com/aioveu-server/avatar/avatar.png",
   success: (res) => {
     console.log("分享成功", res);
   },
@@ -274,9 +274,9 @@ onShareAppMessage(() => ({
 }));
 
 onShareTimeline(() => ({
-  title: "买东西~可我不敌心动小店",
+  title: "买东西~可我不敌心动",
   query: "key=value",
-  imageUrl: "********",
+  imageUrl: "https://cdn.aioveu.com/aioveu-server/avatar/avatar.png",
   success: (res) => {
     console.log("分享到朋友圈成功", res);
   },
