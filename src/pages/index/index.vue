@@ -264,7 +264,7 @@ onPullDownRefresh(async () => {
 onShareAppMessage(() => ({
   title: "买东西~可我不敌心动",
   path: "/pages/index/index",
-  imageUrl: "https://cdn.aioveu.com/aioveu-server/avatar/avatar.png",
+  imageUrl: "********************",
   success: (res) => {
     console.log("分享成功", res);
   },
